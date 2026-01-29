@@ -82,17 +82,33 @@
                     </div>
 
                     <!-- Layout for cards (Scrollable) -->
-                    <div class="flex-1 overflow-y-auto p-2 space-y-3 custom-scrollbar">
+                    <div class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
                          <div v-for="deal in col.deals" :key="deal.id" 
-                            class="group bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing relative"
+                            class="group bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all cursor-pointer relative"
                             draggable="true"
                             @dragstart="onDragStart($event, deal, col.id)"
                             @click="selectedDeal = deal"
                          >
+                            <!-- Header: Tag & Avatar -->
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded" :class="tagColor(deal.type)">
+                                    {{ deal.type }}
+                                </span>
+                                <!-- Owner Avatar (Moved to Header) -->
+                                <div class="flex -space-x-2">
+                                     <div v-if="deal.avatar" class="w-6 h-6 rounded-full border-2 border-white dark:border-slate-800 bg-gray-200 flex items-center justify-center text-[10px] font-bold overflow-hidden" title="Manager">
+                                        <img :src="deal.avatar" class="w-full h-full object-cover">
+                                     </div>
+                                     <div v-else class="w-6 h-6 rounded-full border-2 border-white dark:border-slate-800 bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-[10px] font-bold text-white relative z-10" title="Manager">
+                                        {{ deal.ownerInitials }}
+                                     </div>
+                                </div>
+                            </div>
+
                             <!-- Deal Title & Value -->
                             <div class="mb-2">
-                                <h4 class="font-semibold text-blue-600 dark:text-blue-400 text-sm hover:underline cursor-pointer">{{ deal.title }}</h4>
-                                <div class="text-sm font-bold text-slate-900 dark:text-white mt-0.5">{{ formatCurrency(deal.value, deal.currency) }}</div>
+                                <h4 class="font-semibold text-slate-900 dark:text-white text-sm group-hover:text-blue-600 transition-colors">{{ deal.title }}</h4>
+                                <div class="text-sm font-bold text-slate-700 dark:text-slate-300 mt-0.5">{{ formatCurrency(deal.value, deal.currency) }}</div>
                             </div>
 
                             <!-- Client / Contact -->
@@ -109,15 +125,12 @@
 
                             <!-- Tags & Probability -->
                             <div class="flex items-center gap-2 mb-3 flex-wrap">
-                                <span class="text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded border" :class="tagColor(deal.type)">
-                                    {{ deal.type }}
-                                </span>
                                 <span v-if="deal.probability" class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-600">
-                                    {{ deal.probability }}%
+                                    {{ deal.probability }}% Probability
                                 </span>
                             </div>
 
-                            <!-- Footer: Activity & Owner -->
+                            <!-- Footer: Activity & View Details -->
                             <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700/50">
                                 <!-- Next Activity -->
                                 <div class="flex items-center gap-1.5 text-xs" :class="getActivityColor(deal.next_activity_date)">
@@ -125,26 +138,10 @@
                                     <span>{{ formatRelativeDate(deal.next_activity_date) }}</span>
                                 </div>
 
-                                <!-- Owner Avatar -->
-                                <div v-if="deal.avatar" class="w-5 h-5 rounded-full border border-slate-200 dark:border-slate-600 overflow-hidden" title="Manager">
-                                    <img :src="deal.avatar" class="w-full h-full object-cover">
+                                <!-- View Details Link -->
+                                <div class="text-[11px] font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1 group-hover:underline">
+                                    View Details <i class="pi pi-arrow-right text-[9px]"></i>
                                 </div>
-                                <div v-else class="w-5 h-5 rounded-full border border-slate-200 dark:border-slate-600 bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-[9px] font-bold text-indigo-600 dark:text-indigo-400" title="Manager">
-                                    {{ deal.ownerInitials }}
-                                </div>
-                            </div>
-
-                            <!-- Quick Actions Overlay (Hover) -->
-                            <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 bg-white/90 dark:bg-slate-800/90 rounded-md shadow-sm p-0.5 backdrop-blur-sm">
-                                <button class="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-blue-600 transition-colors" title="Call">
-                                    <i class="pi pi-phone text-xs"></i>
-                                </button>
-                                <button class="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-green-600 transition-colors" title="Email">
-                                    <i class="pi pi-envelope text-xs"></i>
-                                </button>
-                                <button class="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-purple-600 transition-colors" title="Chat">
-                                    <i class="pi pi-comments text-xs"></i>
-                                </button>
                             </div>
                          </div>
                     </div>
