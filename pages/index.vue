@@ -16,9 +16,9 @@
         </section>
 
         <!-- Main Workspace -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-12rem)]">
             <!-- Left Column: Chat & Settings -->
-            <div class="lg:col-span-1 space-y-6">
+            <div class="lg:col-span-3 space-y-6 h-full flex flex-col">
                  <!-- File Upload (Initial State) -->
                 <div v-if="totalRows === 0" class="p-10 rounded-2xl bg-white dark:bg-slate-800 border-2 border-dashed border-here-gray-200 dark:border-slate-700 hover:border-here-purple-400 dark:hover:border-here-purple-500 transition-all text-center group shadow-sm">
                     <div class="w-16 h-16 rounded-full bg-here-purple-50 dark:bg-here-purple-900/20 mx-auto flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -30,14 +30,14 @@
                 </div>
 
                  <!-- Chat Widget (Sticky/Fixed) -->
-                <div v-else class="sticky top-24 space-y-4">
-                    <ChatWidget :loading="isLoading" @submit="processQuery" />
+                <div v-else class="space-y-4 flex-1 flex flex-col">
+                    <ChatWidget :loading="isLoading" @submit="processQuery" class="flex-none" />
                     
                     <!-- Query History -->
-                    <div v-if="queryHistory.length > 0" class="p-4 rounded-xl bg-white dark:bg-slate-800 border border-here-gray-200 dark:border-slate-700 shadow-sm">
+                    <div v-if="queryHistory.length > 0" class="flex-1 overflow-y-auto custom-scrollbar p-4 rounded-xl bg-white dark:bg-slate-800 border border-here-gray-200 dark:border-slate-700 shadow-sm">
                         <h4 class="text-xs font-bold text-slate-400 uppercase mb-3 px-1">Recent Queries</h4>
                         <div class="space-y-1">
-                             <div v-for="item in queryHistory.slice(0, 5)" :key="item.id" 
+                             <div v-for="item in queryHistory.slice(0, 10)" :key="item.id" 
                                 class="p-2.5 rounded-lg hover:bg-here-gray-50 dark:hover:bg-slate-700 cursor-pointer transition-colors text-sm text-slate-600 dark:text-slate-300 flex items-center justify-between group"
                                 @click="processQuery(item.query)"
                             >
@@ -49,10 +49,10 @@
                 </div>
             </div>
 
-            <!-- Right Column: Results & Visualization -->
-            <div class="lg:col-span-2 space-y-6">
+            <!-- Middle Column: Results & Visualization -->
+            <div class="lg:col-span-6 space-y-6 h-full overflow-y-auto custom-scrollbar pr-2">
                  <!-- Initial Empty State -->
-                <div v-if="!analysisResult && totalRows > 0 && !isLoading" class="h-96 rounded-2xl bg-white dark:bg-slate-800 border border-here-gray-200 dark:border-slate-700 border-dashed flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
+                <div v-if="!analysisResult && totalRows > 0 && !isLoading" class="h-full rounded-2xl bg-white dark:bg-slate-800 border border-here-gray-200 dark:border-slate-700 border-dashed flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
                     <div class="w-20 h-20 rounded-full bg-here-gray-50 dark:bg-slate-700 flex items-center justify-center mb-4">
                         <i class="pi pi-sparkles text-3xl text-slate-300 dark:text-slate-500"></i>
                     </div>
@@ -85,6 +85,11 @@
                      <span class="font-medium">{{ error }}</span>
                 </div>
             </div>
+
+            <!-- Right Column: Activity Feed -->
+            <div class="lg:col-span-3 h-full">
+                <ActivityFeed />
+            </div>
         </div>
     </div>
 </template>
@@ -92,6 +97,7 @@
 <script setup lang="ts">
 import StatsWidget from '~/components/analytics/StatsWidget.vue';
 import ChatWidget from '~/components/analytics/ChatWidget.vue';
+import ActivityFeed from '~/components/ActivityFeed.vue';
 
 const { 
     data, 

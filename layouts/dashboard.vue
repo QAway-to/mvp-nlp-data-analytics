@@ -109,12 +109,53 @@
                         <span>New Report</span>
                     </button>
                     <div class="h-8 w-px bg-here-gray-200 dark:bg-slate-700 mx-1"></div>
-                    <button class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors relative">
-                        <i class="pi pi-bell text-lg"></i>
-                        <span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 border-2 border-white dark:border-slate-800"></span>
-                    </button>
+                    
+                    <!-- Notification Bell -->
+                    <div class="relative">
+                        <button @click="toggleNotifications" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors relative">
+                            <i class="pi pi-bell text-lg"></i>
+                            <span v-if="unreadCount() > 0" class="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 border-2 border-white dark:border-slate-800 animate-pulse"></span>
+                        </button>
+
+                        <!-- Dropdown -->
+                        <div v-if="showNotifications" class="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 z-50 overflow-hidden text-left animate-fade-in-down">
+                            <div class="p-3 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+                                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Notifications</h3>
+                                <button v-if="unreadCount() > 0" @click="markAllAsRead" class="text-[10px] font-medium text-blue-600 hover:underline">Mark all read</button>
+                            </div>
+                            <div class="max-h-64 overflow-y-auto custom-scrollbar">
+                                <div v-if="notifications.length === 0" class="p-8 text-center text-slate-400 text-xs italic">
+                                    No notifications
+                                </div>
+                                <div v-for="note in notifications" :key="note.id" 
+                                    class="p-3 border-b border-slate-50 dark:border-slate-700/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
+                                    :class="{'bg-blue-50/30 dark:bg-blue-900/10': !note.read}"
+                                    @click="markAsRead(note.id)"
+                                >
+                                    <div class="flex gap-3">
+                                        <div class="mt-1">
+                                            <i class="pi" :class="{
+                                                'pi-info-circle text-blue-500': note.type === 'info',
+                                                'pi-check-circle text-green-500': note.type === 'success',
+                                                'pi-exclamation-triangle text-amber-500': note.type === 'warning',
+                                                'pi-times-circle text-red-500': note.type === 'error',
+                                            }" style="font-size: 0.8rem"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs font-semibold text-slate-800 dark:text-slate-200" :class="{'font-bold': !note.read}">{{ note.title }}</p>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{{ note.message }}</p>
+                                            <p class="text-[10px] text-slate-400 mt-1">{{ new Date(note.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </header>
+
+            <!-- Global Toast -->
+            <ToastNotification />
 
             <!-- Page Content -->
             <main class="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
@@ -125,9 +166,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { useNotifications } from '~/composables/useNotifications';
+import ToastNotification from '~/components/ui/ToastNotification.vue';
 
 const isSidebarOpen = ref(false);
 const route = useRoute();
+
+// Notifications
+const { notifications, unreadCount, markAsRead, markAllAsRead, startDemoNotifications } = useNotifications();
+const showNotifications = ref(false);
+
+const toggleNotifications = () => {
+    showNotifications.value = !showNotifications.value;
+};
+
+// Close dropdown when clicking outside (simple version)
+onMounted(() => {
+    startDemoNotifications();
+});
 </script>
