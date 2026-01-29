@@ -69,7 +69,7 @@
                                      </div>
                                 </div>
                                 <span class="font-semibold text-slate-700 dark:text-slate-300 text-sm">
-                                    ${{ deal.value.toLocaleString() }}
+                                    {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: deal.currency }).format(deal.value) }}
                                 </span>
                             </div>
                          </div>
