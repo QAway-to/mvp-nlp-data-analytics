@@ -53,6 +53,13 @@
                     <i class="pi pi-th-large" :class="route.path === '/deals' ? 'text-here-purple-600 dark:text-here-purple-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'"></i>
                     Deals Pipeline
                 </router-link>
+
+                <router-link to="/clients" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group"
+                     :class="route.path === '/clients' ? 'bg-here-purple-50 dark:bg-here-purple-900/20 text-here-purple-700 dark:text-here-purple-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'"
+                 >
+                    <i class="pi pi-users" :class="route.path === '/clients' ? 'text-here-purple-600 dark:text-here-purple-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'"></i>
+                    Clients
+                </router-link>
             </div>
 
             <!-- Bottom User -->

@@ -69,81 +69,96 @@
                     <div class="flex-none p-3 border-t-4 rounded-t-xl bg-white dark:bg-slate-800 shadow-sm border-x border-b border-slate-200 dark:border-slate-700"
                          :style="{ borderTopColor: col.color }"
                     >
-                        <div class="flex items-center justify-between mb-2">
-                            <h3 class="font-bold text-slate-700 dark:text-slate-200 text-sm">{{ col.label }}</h3>
-                            <button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-                                <i class="pi pi-ellipsis-h"></i>
-                            </button>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">{{ col.deals.length }} deals</span>
-                            <span class="text-sm font-bold text-slate-700 dark:text-slate-300">{{ formatCurrency(getStageTotal(col.id)) }}</span>
-                        </div>
+                <!-- Column Header -->
+                <div class="flex items-center justify-between mb-3 px-1">
+                    <div class="flex items-center gap-2">
+                        <h3 class="font-bold text-slate-700 dark:text-slate-200">{{ col.label }}</h3>
+                        <span class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-xs font-bold px-2 py-0.5 rounded-full">{{ col.deals_count }}</span>
                     </div>
+                    <!-- Add Deal Button (Only for first column) -->
+                    <button v-if="col.id === 'new'" class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 transition-colors" title="Quick Add">
+                        <i class="pi pi-plus text-xs"></i>
+                    </button>
+                    <button v-else class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 transition-colors opacity-0 cursor-default">
+                        <i class="pi pi-plus text-xs"></i>
+                    </button>
+                </div>
 
-                    <!-- Layout for cards (Scrollable) -->
-                    <div class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
-                         <div v-for="deal in col.deals" :key="deal.id" 
-                            class="group bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all cursor-pointer relative"
-                            draggable="true"
-                            @dragstart="onDragStart($event, deal, col.id)"
-                            @click="selectedDeal = deal"
-                         >
-                            <!-- Header: Tag & Avatar -->
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded" :class="tagColor(deal.type)">
-                                    {{ deal.type }}
+                <!-- Column Settings / Sort (Optional) -->
+                <div class="h-1 w-full rounded-full mb-3" :style="{ backgroundColor: col.color || '#cbd5e1' }"></div>
+
+                <!-- Layout for cards (Scrollable) -->
+                <div class="flex-1 overflow-y-auto p-2 space-y-3 custom-scrollbar">
+                     <div v-for="deal in col.deals" :key="deal.id" 
+                        class="group bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all cursor-pointer relative"
+                        draggable="true"
+                        @dragstart="onDragStart($event, deal, col.id)"
+                        @click="selectedDeal = deal"
+                     >
+                        <!-- Top Row: Payment Type & Phone -->
+                        <div class="flex justify-between items-center mb-2">
+                            <!-- Payment Split Badge -->
+                            <span v-if="deal.payment_type" class="text-[10px] font-bold px-1.5 py-0.5 rounded border" 
+                                :class="{
+                                    'bg-indigo-50 text-indigo-600 border-indigo-200': deal.payment_type === '2_parts',
+                                    'bg-teal-50 text-teal-600 border-teal-200': deal.payment_type === '3_parts',
+                                    'bg-green-50 text-green-600 border-green-200': deal.payment_type === 'full'
+                                }">
+                                {{ deal.payment_type === '2_parts' ? '50/50' : deal.payment_type === '3_parts' ? '35/35/30' : '100%' }}
+                            </span>
+                            <span v-else class="text-[10px] text-slate-400 border border-transparent px-1.5 py-0.5">No Terms</span>
+
+                            <!-- Phone Mask -->
+                            <div class="text-[11px] font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                <i class="pi pi-phone text-[9px]"></i>
+                                <span v-if="deal.contact_phone">**** {{ deal.contact_phone.slice(-4) }}</span>
+                                <span v-else class="text-blue-500 cursor-pointer hover:underline text-[10px]">Add Phone</span>
+                            </div>
+                        </div>
+
+                        <!-- Main Info: Sum & Client -->
+                        <div class="mb-2">
+                            <div class="text-lg font-bold text-slate-900 dark:text-white leading-tight">
+                                {{ formatCurrency(deal.value, deal.currency) }}
+                            </div>
+                            <div class="text-sm font-semibold text-blue-600 dark:text-blue-400 mt-0.5 truncate">
+                                {{ deal.contact_name || deal.company }}
+                            </div>
+                        </div>
+
+                        <!-- Specific Details: Cemetery & Permit Date -->
+                        <div class="mb-3 space-y-1">
+                            <div v-if="deal.cemetery_name" class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                                <i class="pi pi-map-marker text-[10px] text-slate-400"></i>
+                                <span class="truncate">{{ deal.cemetery_name }}</span>
+                            </div>
+                            <div v-if="deal.permit_date" class="flex items-center gap-1.5 text-xs font-medium">
+                                <i class="pi pi-file text-[10px] text-slate-400"></i>
+                                <span :class="isDatePast(deal.permit_date) ? 'text-red-600' : 'text-slate-600 dark:text-slate-400'">
+                                    Permit: {{ formatDateShort(deal.permit_date) }}
                                 </span>
-                                <!-- Owner Avatar (Moved to Header) -->
-                                <div class="flex -space-x-2">
-                                     <div v-if="deal.avatar" class="w-6 h-6 rounded-full border-2 border-white dark:border-slate-800 bg-gray-200 flex items-center justify-center text-[10px] font-bold overflow-hidden" title="Manager">
-                                        <img :src="deal.avatar" class="w-full h-full object-cover">
-                                     </div>
-                                     <div v-else class="w-6 h-6 rounded-full border-2 border-white dark:border-slate-800 bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-[10px] font-bold text-white relative z-10" title="Manager">
-                                        {{ deal.ownerInitials }}
-                                     </div>
-                                </div>
                             </div>
+                        </div>
 
-                            <!-- Deal Title & Value -->
-                            <div class="mb-2">
-                                <h4 class="font-semibold text-slate-900 dark:text-white text-sm group-hover:text-blue-600 transition-colors">{{ deal.title }}</h4>
-                                <div class="text-sm font-bold text-slate-700 dark:text-slate-300 mt-0.5">{{ formatCurrency(deal.value, deal.currency) }}</div>
-                            </div>
-
-                            <!-- Client / Contact -->
-                            <div class="flex items-center gap-2 mb-3">
-                                <div class="w-6 h-6 rounded bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500">
-                                    <i class="pi pi-building text-[10px]"></i>
+                        <!-- Footer: Task Status (Red/Green) -->
+                        <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700/50">
+                            <!-- Next Activity Icon -->
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center transition-colors"
+                                    :class="isDatePast(deal.next_activity_date) ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'">
+                                    <i class="pi" :class="deal.next_activity_type === 'call' ? 'pi-phone' : deal.next_activity_type === 'meeting' ? 'pi-users' : 'pi-check-square'" style="font-size: 10px;"></i>
                                 </div>
-                                <div class="text-xs text-slate-600 dark:text-slate-400 truncate flex-1">
-                                    {{ deal.company }}
-                                    <span v-if="deal.contact_name" class="text-slate-400 dark:text-slate-500 mx-1">•</span>
-                                    <span v-if="deal.contact_name">{{ deal.contact_name }}</span>
-                                </div>
-                            </div>
-
-                            <!-- Tags & Probability -->
-                            <div class="flex items-center gap-2 mb-3 flex-wrap">
-                                <span v-if="deal.probability" class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-600">
-                                    {{ deal.probability }}% Probability
+                                <span class="text-[10px] text-slate-500">
+                                    {{ deal.next_activity_date ? formatRelativeDate(deal.next_activity_date) : 'No tasks' }}
                                 </span>
                             </div>
 
-                            <!-- Footer: Activity & View Details -->
-                            <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700/50">
-                                <!-- Next Activity -->
-                                <div class="flex items-center gap-1.5 text-xs" :class="getActivityColor(deal.next_activity_date)">
-                                    <i class="pi" :class="getActivityIcon(deal.next_activity_type)"></i>
-                                    <span>{{ formatRelativeDate(deal.next_activity_date) }}</span>
-                                </div>
-
-                                <!-- View Details Link -->
-                                <div class="text-[11px] font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1 group-hover:underline">
-                                    View Details <i class="pi pi-arrow-right text-[9px]"></i>
-                                </div>
+                             <!-- View Details Link (Mini) -->
+                            <div class="text-[10px] text-slate-400 group-hover:text-blue-500 transition-colors flex items-center cursor-pointer">
+                                Details <i class="pi pi-chevron-right text-[8px] ml-0.5"></i>
                             </div>
-                         </div>
+                        </div>
+                     </div>
                     </div>
                 </div>
              </div>
@@ -205,6 +220,68 @@
                             <div>
                                 <div class="text-sm font-semibold text-slate-900 dark:text-white">{{ selectedDeal.contact_name }}</div>
                                 <div class="text-xs text-slate-500">{{ selectedDeal.contact_email || 'No email' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+
+                 <!-- Products Section (Demo Polish) -->
+                 <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Products & Services</h3>
+                        <button @click="showProductForm = !showProductForm" class="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                            <i class="pi" :class="showProductForm ? 'pi-minus' : 'pi-plus'"></i> {{ showProductForm ? 'Cancel' : 'Add Item' }}
+                        </button>
+                    </div>
+
+                    <!-- Product List -->
+                    <div v-if="dealProducts.length > 0" class="space-y-2 mb-3">
+                        <div v-for="(item, idx) in dealProducts" :key="idx" class="bg-white dark:bg-slate-700 p-2 rounded border border-slate-200 dark:border-slate-600 shadow-sm relative group">
+                            <div class="flex justify-between items-start">
+                                <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ item.name }}</span>
+                                <span class="text-sm font-bold text-slate-900 dark:text-white">{{ formatCurrency(calculateItemTotal(item)) }}</span>
+                            </div>
+                            <div class="text-xs text-slate-500 mt-1 flex gap-2">
+                                <span>{{ item.quantity }} pcs x {{ formatCurrency(item.price) }}</span>
+                                <span v-if="item.discount > 0" class="text-red-500">(-{{ item.discount }}%)</span>
+                            </div>
+                            <button @click="removeProduct(idx)" class="absolute -top-1 -right-1 bg-red-100 text-red-600 rounded-full w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="Remove">
+                                <i class="pi pi-times text-[8px]"></i>
+                            </button>
+                        </div>
+                        <div class="pt-2 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                            <span class="text-xs font-bold text-slate-500">Total Amount</span>
+                            <span class="text-sm font-bold text-slate-900 dark:text-white">{{ formatCurrency(calculateDealTotal()) }}</span>
+                        </div>
+                    </div>
+                    <div v-else-if="!showProductForm" class="text-xs text-slate-400 italic text-center py-2">
+                        No products added.
+                    </div>
+
+                    <!-- Add Product Form -->
+                    <div v-if="showProductForm" class="bg-white dark:bg-slate-700 p-3 rounded border border-blue-200 dark:border-blue-800/50 shadow-sm animate-fade-in-down">
+                        <div class="space-y-2">
+                            <input v-model="newProduct.name" type="text" placeholder="Product / Service Name" class="w-full text-xs p-1.5 rounded border border-slate-300 dark:border-slate-600 bg-transparent dark:text-white focus:outline-none focus:border-blue-500">
+                            <div class="flex gap-2">
+                                <div class="flex-1">
+                                    <label class="text-[10px] text-slate-500 block">Price</label>
+                                    <input v-model.number="newProduct.price" type="number" class="w-full text-xs p-1.5 rounded border border-slate-300 dark:border-slate-600 bg-transparent dark:text-white">
+                                </div>
+                                <div class="w-16">
+                                    <label class="text-[10px] text-slate-500 block">Qty</label>
+                                    <input v-model.number="newProduct.quantity" type="number" class="w-full text-xs p-1.5 rounded border border-slate-300 dark:border-slate-600 bg-transparent dark:text-white">
+                                </div>
+                                <div class="w-16">
+                                    <label class="text-[10px] text-slate-500 block">Disc %</label>
+                                    <input v-model.number="newProduct.discount" type="number" class="w-full text-xs p-1.5 rounded border border-slate-300 dark:border-slate-600 bg-transparent dark:text-white">
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center pt-2">
+                                <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Total: {{ formatCurrency(calculateItemTotal(newProduct)) }}</span>
+                                <button @click="addProduct" :disabled="!newProduct.name || newProduct.price <= 0" 
+                                    class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded font-medium disabled:opacity-50 hover:bg-blue-700">
+                                    Add
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -322,6 +399,52 @@ const getActivityIcon = (type?: string) => {
         default: return 'pi-clock';
     }
 };
+
+// Helpers
+const isDatePast = (date?: Date) => {
+    return date ? date < new Date() : false;
+};
+
+const formatDateShort = (date?: Date) => {
+    if (!date) return '';
+    return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
+};
+
+// ... existing helpers ...
+
+// Products Logic
+interface ProductItem {
+    name: string;
+    price: number;
+    quantity: number;
+    discount: number;
+}
+const dealProducts = ref<ProductItem[]>([
+    { name: 'Standard Service', price: 1500, quantity: 1, discount: 0 },
+    { name: 'Consultation', price: 200, quantity: 2, discount: 10 }
+]);
+const showProductForm = ref(false);
+const newProduct = ref<ProductItem>({ name: '', price: 0, quantity: 1, discount: 0 });
+
+const calculateItemTotal = (item: ProductItem) => {
+    return item.price * item.quantity * (1 - (item.discount || 0) / 100);
+};
+
+const calculateDealTotal = () => {
+    return dealProducts.value.reduce((sum, item) => sum + calculateItemTotal(item), 0);
+};
+
+const addProduct = () => {
+    if (!newProduct.value.name) return;
+    dealProducts.value.push({ ...newProduct.value });
+    newProduct.value = { name: '', price: 0, quantity: 1, discount: 0 };
+    showProductForm.value = false;
+};
+
+const removeProduct = (idx: number) => {
+    dealProducts.value.splice(idx, 1);
+};
+
 
 // Drag and Drop Logic
 const draggedDeal = ref<{ deal: Deal; sourceStageId: string } | null>(null);

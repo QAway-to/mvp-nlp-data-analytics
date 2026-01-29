@@ -85,6 +85,9 @@ export interface Deal {
     contact_name?: string;
     contact_email?: string;
     contact_phone?: string;
+    cemetery_name?: string;
+    permit_date?: Date;
+    payment_type?: '3_parts' | '2_parts' | 'full'; // 3_parts=35/35/30, 2_parts=50/50
     last_activity_date?: Date;
     next_activity_date?: Date;
     next_activity_type?: 'call' | 'email' | 'meeting' | 'task';

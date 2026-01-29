@@ -23,6 +23,10 @@ export const useDeals = () => {
                     ownerInitials: 'IZ',
                     probability: 10,
                     contact_name: 'John Doe',
+                    contact_phone: '5551234567',
+                    cemetery_name: 'Memorial Park',
+                    payment_type: '2_parts',
+                    permit_date: new Date('2026-02-15'),
                     last_activity_date: new Date('2026-01-28'),
                     next_activity_date: new Date('2026-01-30'),
                     next_activity_type: 'call'
@@ -41,7 +45,11 @@ export const useDeals = () => {
                     avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d',
                     probability: 20,
                     contact_name: 'Sarah Smith',
-                    contact_email: 'sarah@starlight.com'
+                    contact_email: 'sarah@starlight.com',
+                    contact_phone: '5559876543',
+                    cemetery_name: 'Green Hills',
+                    payment_type: '3_parts',
+                    permit_date: new Date('2026-01-10'), // Overdue
                 }
             ]
         },
