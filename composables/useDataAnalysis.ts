@@ -87,25 +87,76 @@ export const useDataAnalysis = () => {
         isLoading.value = true;
         error.value = null;
 
+        // Initial empty state for streaming
+        analysisResult.value = {
+            type: 'text',
+            description: 'Analyzing...',
+            message: '',
+        };
+
         try {
-            const result = await $fetch<AnalysisResult>('/api/query', {
+            const response = await fetch('/api/query', {
                 method: 'POST',
-                body: {
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                     query: queryText,
-                    data: data.value, // In prod, might want to send only schema or sample if data is huge
+                    data: data.value,
                     columns: columns.value
+                })
+            });
+
+            if (!response.body) throw new Error('No response body');
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let loop = true;
+
+            while (loop) {
+                const { done, value } = await reader.read();
+                if (done) {
+                    loop = false;
+                    break;
                 }
-            });
 
-            analysisResult.value = result;
+                const chunk = decoder.decode(value, { stream: true });
+                // Simple parsing assuming chunks often arrive mostly intact or concatenated
+                // We split by standard markers T: and D:
+                // A better protocol would be SSE, but this works for MVP HTTP streaming
 
-            // Add to history
-            queryHistory.value.unshift({
-                id: Date.now(),
-                query: queryText,
-                timestamp: new Date(),
-                resultType: result.type
-            });
+                // We simply look for our prefixes. 
+                // Since T: text might contain "D:", we rely on the fact that D: is sent as a distinct final block usually.
+                // However, to be safe against concatenation: T:HelloT:World
+
+                // regex to find all matches of (Start or T:|D:)
+                const parts = chunk.split(/(?=[TD]:)/);
+
+                for (const part of parts) {
+                    if (part.startsWith('T:')) {
+                        analysisResult.value.message += part.substring(2);
+                    } else if (part.startsWith('D:')) {
+                        try {
+                            const jsonData = JSON.parse(part.substring(2));
+                            // Merge the final structured data
+                            analysisResult.value = {
+                                ...analysisResult.value,
+                                ...jsonData,
+                                // Keep the accumulated message if the JSON one is empty or just generic
+                                message: analysisResult.value.message
+                            };
+
+                            // Add to history
+                            queryHistory.value.unshift({
+                                id: Date.now(),
+                                query: queryText,
+                                timestamp: new Date(),
+                                resultType: jsonData.type
+                            });
+                        } catch (e) {
+                            console.error('Error parsing final data:', e);
+                        }
+                    }
+                }
+            }
 
         } catch (e: any) {
             console.error(e);

@@ -43,15 +43,11 @@ function generateSchemaDescription(schema: string[], sampleData: any[]) {
     return description;
 }
 
-export async function processNLQuery(query: string, dataSchema: string[], sampleData: any[]): Promise<GeminiResponse> {
+export async function streamNLQuery(query: string, dataSchema: string[], sampleData: any) {
     try {
-        console.log('[Gemini] Processing query:', query);
+        console.log('[Gemini] Streaming query:', query);
         const apiKey = validateApiKey();
-
-        // 1. Initialize official SDK
         const genAI = new GoogleGenerativeAI(apiKey);
-
-        // 2. Use the specific model requested
         const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
         const schemaDescription = generateSchemaDescription(dataSchema, sampleData);
@@ -67,11 +63,13 @@ ${JSON.stringify(sampleData.slice(0, 3), null, 2)}
 Вопрос: "${query}"
 
 ЗАДАЧА:
-1. Проанализируй вопрос и данные.
-2. Определи тип анализа (statistics, visualization, correlations, anomalies).
-3. Дай понятное объяснение и инсайты.
+1. Сначала дай текстовое объяснение того, что ты собираешься показать или проанализировать.
+2. Затем верни JSON блок с параметрами для визуализации или статистики.
 
-Верни ТОЛЬКО валидный JSON (без Markdown форматирования):
+ФОРМАТ ОТВЕТА (Строго соблюдай порядок):
+Сначала просто текст c объяснением (Markdown допустим).
+Затем разделитель: "---JSON---"
+Затем валидный JSON:
 {
   "type": "statistics" | "visualization" | "correlations" | "sql" | "text",
   "statistics": ["mean", "count", ...] (если type="statistics"),
@@ -80,37 +78,12 @@ ${JSON.stringify(sampleData.slice(0, 3), null, 2)}
     "xAxis": "col_name",
     "yAxis": "col_name"
   },
-  "description": "Краткое описание",
-  "message": "Подробный ответ пользователю",
-  "insights": [
-    {
-      "type": "pattern" | "anomaly" | "trend" | "recommendation",
-      "title": "Заголовок",
-      "description": "Описание",
-      "severity": "low" | "medium" | "high"
-    }
-  ]
-}`;
+  "insights": [ ... ]
+}
+`;
 
-        // 3. Generate content
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
-
-        // 4. Clean and parse JSON
-        // Gemini sometimes adds backticks like ```json ... ```
-        const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-
-        const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-            return JSON.parse(jsonMatch[0]) as GeminiResponse;
-        }
-
-        return {
-            type: 'text',
-            message: text,
-            description: 'Анализ выполнен (JSON не распознан)'
-        };
+        const result = await model.generateContentStream(prompt);
+        return result;
 
     } catch (error: any) {
         console.error('[Gemini] Error:', error);
