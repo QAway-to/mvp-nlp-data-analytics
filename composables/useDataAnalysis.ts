@@ -1,11 +1,7 @@
 import { ref, computed } from 'vue';
 import Papa from 'papaparse';
-
-
-export interface DataColumn {
-    name: string;
-    type: string;
-}
+import { useLocalStorage } from '@vueuse/core';
+import type { AnalysisResult, QueryHistoryItem, SavedReport, DataColumn } from '~/types';
 
 export const useDataAnalysis = () => {
     const data = ref<any[]>([]);
@@ -14,8 +10,11 @@ export const useDataAnalysis = () => {
     const error = ref<string | null>(null);
 
     // Analysis results
-    const analysisResult = ref<any>(null);
-    const queryHistory = ref<any[]>([]);
+    const analysisResult = ref<AnalysisResult | null>(null);
+    const queryHistory = ref<QueryHistoryItem[]>([]);
+
+    // Persistence
+    const savedReports = useLocalStorage<SavedReport[]>('here-crm-reports', []);
 
     const totalRows = computed(() => data.value.length);
     const numericColumns = computed(() => {
@@ -115,6 +114,25 @@ export const useDataAnalysis = () => {
         }
     };
 
+    const saveCurrentReport = (title: string) => {
+        if (!analysisResult.value) return;
+        savedReports.value.push({
+            id: crypto.randomUUID(),
+            title: title || `Report ${new Date().toLocaleDateString()}`,
+            date: new Date().toISOString(),
+            result: analysisResult.value,
+            query: queryHistory.value[0]?.query || 'Manual Analysis'
+        });
+    };
+
+    const deleteReport = (id: string) => {
+        savedReports.value = savedReports.value.filter(r => r.id !== id);
+    };
+
+    const loadReport = (report: SavedReport) => {
+        analysisResult.value = report.result;
+    };
+
     return {
         data,
         columns,
@@ -124,7 +142,11 @@ export const useDataAnalysis = () => {
         numericColumns,
         analysisResult,
         queryHistory,
+        savedReports,
         handleFileUpload,
-        processQuery
+        processQuery,
+        saveCurrentReport,
+        deleteReport,
+        loadReport
     };
 };

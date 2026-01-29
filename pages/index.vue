@@ -62,7 +62,16 @@
                 </div>
 
                 <!-- Results Panel -->
-                <ResultsPanel v-if="analysisResult && !isLoading" :result="analysisResult" />
+                <div v-if="analysisResult && !isLoading" class="space-y-4">
+                     <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-bold text-slate-900">Analysis Results</h2>
+                        <button @click="openSaveDialog" class="text-sm text-here-purple-600 hover:text-here-purple-700 font-medium flex items-center gap-2">
+                            <i class="pi pi-save"></i>
+                            Save to Reports
+                        </button>
+                    </div>
+                    <ResultsPanel :result="analysisResult" />
+                </div>
                 
                 <!-- Error State -->
                 <div v-if="error" class="p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 flex items-center gap-3">
@@ -88,8 +97,18 @@ const {
     analysisResult, 
     queryHistory,
     handleFileUpload, 
-    processQuery 
+    processQuery,
+    saveCurrentReport
 } = useDataAnalysis();
+
+const openSaveDialog = () => {
+    // Simple prompt for MVP, better would be a PrimeVue Dialog
+    const title = prompt('Enter a title for this report:', `Analysis ${new Date().toLocaleTimeString()}`);
+    if (title) {
+        saveCurrentReport(title);
+        alert('Report saved!'); // Replace with toast later
+    }
+};
 </script>
 
 <style scoped>

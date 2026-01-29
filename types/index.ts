@@ -41,6 +41,15 @@ export interface AnalysisResult {
     logs?: Array<{ timestamp: string; message: string }>;
 }
 
+export interface SavedReport {
+    id: string;
+    title: string;
+    date: string;
+    result: AnalysisResult;
+    query: string;
+    projectId?: string;
+}
+
 export interface QueryHistoryItem {
     id: number;
     query: string;

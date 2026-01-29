@@ -35,10 +35,12 @@
                 <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-3 mt-8">
                     Analytics
                 </div>
-                 <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all group">
-                    <i class="pi pi-bookmark text-slate-400 group-hover:text-slate-600"></i>
+                 <router-link to="/reports" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group"
+                     :class="route.path === '/reports' ? 'bg-here-purple-50 text-here-purple-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                 >
+                    <i class="pi pi-bookmark" :class="route.path === '/reports' ? 'text-here-purple-600' : 'text-slate-400 group-hover:text-slate-600'"></i>
                     Saved Reports
-                </a>
+                </router-link>
             </div>
 
             <!-- Bottom User -->
