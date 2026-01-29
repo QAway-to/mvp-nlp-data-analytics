@@ -14,12 +14,12 @@
             <!-- Left Column: Chat & Settings -->
             <div class="lg:col-span-1 space-y-6">
                  <!-- File Upload (Initial State) -->
-                <div v-if="totalRows === 0" class="p-8 rounded-2xl bg-slate-800/30 border-2 border-dashed border-slate-700 hover:border-indigo-500/50 transition-colors text-center group">
-                    <div class="w-16 h-16 rounded-full bg-slate-800 mx-auto flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i class="pi pi-cloud-upload text-2xl text-slate-400 group-hover:text-indigo-400"></i>
+                <div v-if="totalRows === 0" class="p-10 rounded-2xl bg-white border-2 border-dashed border-here-gray-200 hover:border-here-purple-400 transition-all text-center group shadow-sm">
+                    <div class="w-16 h-16 rounded-full bg-here-purple-50 mx-auto flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i class="pi pi-cloud-upload text-2xl text-here-purple-600"></i>
                     </div>
-                    <h3 class="text-lg font-semibold text-white mb-2">Connect Data Source</h3>
-                    <p class="text-slate-400 text-sm mb-6">Upload CSV or Excel files to begin analysis</p>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">Connect Data</h3>
+                    <p class="text-slate-500 text-sm mb-6">Drag & Drop or Click to upload CSV/Excel</p>
                     <FileUploader @file-uploaded="handleFileUpload" />
                 </div>
 
@@ -28,15 +28,15 @@
                     <ChatWidget :loading="isLoading" @submit="processQuery" />
                     
                     <!-- Query History -->
-                    <div v-if="queryHistory.length > 0" class="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
-                        <h4 class="text-xs font-semibold text-slate-500 uppercase mb-3">Recent Queries</h4>
-                        <div class="space-y-2">
+                    <div v-if="queryHistory.length > 0" class="p-4 rounded-xl bg-white border border-here-gray-200 shadow-sm">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase mb-3 px-1">Recent Queries</h4>
+                        <div class="space-y-1">
                              <div v-for="item in queryHistory.slice(0, 5)" :key="item.id" 
-                                class="p-2 rounded-lg hover:bg-slate-700/30 cursor-pointer transition-colors text-sm text-slate-300 flex items-center justify-between group"
+                                class="p-2.5 rounded-lg hover:bg-here-gray-50 cursor-pointer transition-colors text-sm text-slate-600 flex items-center justify-between group"
                                 @click="processQuery(item.query)"
                             >
-                                <span class="truncate">{{ item.query }}</span>
-                                <i class="pi pi-arrow-right opacity-0 group-hover:opacity-100 text-xs text-indigo-400"></i>
+                                <span class="truncate font-medium">{{ item.query }}</span>
+                                <i class="pi pi-arrow-right opacity-0 group-hover:opacity-100 text-xs text-here-purple-500"></i>
                             </div>
                         </div>
                     </div>
@@ -46,26 +46,28 @@
             <!-- Right Column: Results & Visualization -->
             <div class="lg:col-span-2 space-y-6">
                  <!-- Initial Empty State -->
-                <div v-if="!analysisResult && totalRows > 0 && !isLoading" class="h-96 rounded-2xl bg-slate-800/20 border border-slate-800 border-dashed flex flex-col items-center justify-center text-slate-500">
-                    <i class="pi pi-chart-bar text-4xl mb-4 opacity-20"></i>
-                    <p>Ask a question to generate insights</p>
+                <div v-if="!analysisResult && totalRows > 0 && !isLoading" class="h-96 rounded-2xl bg-white border border-here-gray-200 border-dashed flex flex-col items-center justify-center text-slate-400">
+                    <div class="w-20 h-20 rounded-full bg-here-gray-50 flex items-center justify-center mb-4">
+                        <i class="pi pi-sparkles text-3xl text-slate-300"></i>
+                    </div>
+                    <p class="font-medium">AI Insights will appear here</p>
                 </div>
 
                 <!-- Loading State -->
-                <div v-if="isLoading" class="h-96 rounded-2xl bg-slate-800/20 border border-slate-800 animate-pulse flex items-center justify-center">
+                <div v-if="isLoading" class="h-96 rounded-2xl bg-white border border-here-gray-200 shadow-sm flex items-center justify-center">
                     <div class="flex flex-col items-center gap-4">
-                        <i class="pi pi-spin pi-spinner text-indigo-500 text-3xl"></i>
-                        <span class="text-slate-400 text-sm animate-pulse">Analyzing data structures...</span>
+                        <i class="pi pi-spin pi-spinner text-here-purple-600 text-4xl"></i>
+                        <span class="text-slate-500 text-sm font-medium animate-pulse">Analyzing data structures...</span>
                     </div>
                 </div>
 
-                <!-- Results Panel (Reusing logic for now, wrapping later) -->
+                <!-- Results Panel -->
                 <ResultsPanel v-if="analysisResult && !isLoading" :result="analysisResult" />
                 
                 <!-- Error State -->
-                <div v-if="error" class="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 flex items-center gap-3">
-                     <i class="pi pi-exclamation-triangle"></i>
-                     <span>{{ error }}</span>
+                <div v-if="error" class="p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 flex items-center gap-3">
+                     <i class="pi pi-exclamation-circle text-xl"></i>
+                     <span class="font-medium">{{ error }}</span>
                 </div>
             </div>
         </div>

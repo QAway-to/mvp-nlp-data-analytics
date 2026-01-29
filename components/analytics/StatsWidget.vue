@@ -1,48 +1,43 @@
 <template>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Rows Card -->
-        <div class="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 backdrop-blur-sm shadow-sm relative overflow-hidden group hover:border-indigo-500/30 transition-all duration-300">
-            <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:scale-110 group-hover:opacity-20 transition-all">
-                <i class="pi pi-table text-4xl text-indigo-400"></i>
+        <div class="p-5 rounded-xl bg-white border border-here-gray-200 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
+            <div class="flex justify-between items-start mb-4">
+                <div class="p-2 rounded-lg bg-indigo-50 text-indigo-600">
+                     <i class="pi pi-table text-xl"></i>
+                </div>
             </div>
-            <div class="text-sm font-medium text-slate-400 mb-1">Total Rows</div>
-            <div class="text-2xl font-bold text-white tracking-tight">
+            
+            <div class="text-3xl font-bold text-slate-900 tracking-tight mb-1">
                 {{ totalRows }}
             </div>
-            <div class="text-xs text-indigo-400 mt-2 flex items-center gap-1" v-if="totalRows > 0">
-                <i class="pi pi-check-circle"></i>
-                <span>Ready for analysis</span>
-            </div>
+            <div class="text-sm font-medium text-slate-500">Total Rows</div>
         </div>
 
         <!-- Columns Card -->
-        <div class="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 backdrop-blur-sm shadow-sm relative overflow-hidden group hover:border-purple-500/30 transition-all duration-300">
-            <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:scale-110 group-hover:opacity-20 transition-all">
-                 <i class="pi pi-list text-4xl text-purple-400"></i>
+        <div class="p-5 rounded-xl bg-white border border-here-gray-200 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
+             <div class="flex justify-between items-start mb-4">
+                <div class="p-2 rounded-lg bg-orange-50 text-orange-600">
+                     <i class="pi pi-list text-xl"></i>
+                </div>
             </div>
-            <div class="text-sm font-medium text-slate-400 mb-1">Variables</div>
-            <div class="text-2xl font-bold text-white tracking-tight">
+            <div class="text-3xl font-bold text-slate-900 tracking-tight mb-1">
                 {{ columns.length }}
             </div>
-             <div class="text-xs text-purple-400 mt-2 flex items-center gap-1" v-if="columns.length > 0">
-                <i class="pi pi-database"></i>
-                <span>Columns detected</span>
-            </div>
+            <div class="text-sm font-medium text-slate-500">Variables</div>
         </div>
         
          <!-- Numeric Cols -->
-        <div class="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 backdrop-blur-sm shadow-sm relative overflow-hidden group hover:border-emerald-500/30 transition-all duration-300">
-             <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:scale-110 group-hover:opacity-20 transition-all">
-                 <i class="pi pi-calculator text-4xl text-emerald-400"></i>
+        <div class="p-5 rounded-xl bg-white border border-here-gray-200 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
+             <div class="flex justify-between items-start mb-4">
+                <div class="p-2 rounded-lg bg-emerald-50 text-emerald-600">
+                     <i class="pi pi-chart-line text-xl"></i>
+                </div>
             </div>
-            <div class="text-sm font-medium text-slate-400 mb-1">Numeric Metric</div>
-            <div class="text-2xl font-bold text-white tracking-tight">
+            <div class="text-3xl font-bold text-slate-900 tracking-tight mb-1">
                 {{ numericCount }}
             </div>
-             <div class="text-xs text-emerald-400 mt-2 flex items-center gap-1" v-if="numericCount > 0">
-                <i class="pi pi-chart-line"></i>
-                <span>Analyzable metrics</span>
-            </div>
+            <div class="text-sm font-medium text-slate-500">Analyzable metrics</div>
         </div>
     </div>
 </template>
