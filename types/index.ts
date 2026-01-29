@@ -64,3 +64,39 @@ export interface QueryHistoryItem {
     timestamp: Date;
     resultType: AnalysisResult['type'];
 }
+
+// CRM Models
+export interface Deal {
+    id: string; // UUID
+    title: string;
+    company: string;
+    value: number;
+    currency: string;
+    status: 'new' | 'contacted' | 'proposal' | 'won' | 'lost';
+    type: 'inbound' | 'outbound' | 'strategic' | 'referral';
+    manager_id: string; // UUID
+    created_at: Date;
+    nlp_analysis?: {
+        risk_score: number;
+        summary_sentiment: 'positive' | 'neutral' | 'negative';
+        [key: string]: any;
+    };
+    // UI Helpers (Optional)
+    avatar?: string;
+    ownerInitials?: string;
+}
+
+export interface PipelineColumn {
+    id: string;
+    label: string;
+    deals_count: number;
+    // UI Helper
+    deals: Deal[];
+}
+
+export interface AnalyticsReport {
+    period: string; // e.g. "Q1 2024"
+    total_pipeline_value: number;
+    weighted_forecast: number;
+    conversion_rate: number;
+}

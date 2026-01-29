@@ -33,7 +33,7 @@
                     <!-- Header -->
                     <div class="flex-none flex items-center justify-between p-3">
                         <div class="flex items-center gap-2">
-                            <h3 class="font-bold text-slate-700 dark:text-slate-200 text-sm sm:text-base">{{ col.name }}</h3>
+                            <h3 class="font-bold text-slate-700 dark:text-slate-200 text-sm sm:text-base">{{ col.label }}</h3>
                             <span class="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300">{{ col.deals.length }}</span>
                         </div>
                         <button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
@@ -49,8 +49,8 @@
                             @dragstart="onDragStart($event, deal, col.id)"
                          >
                             <div class="flex justify-between items-start mb-2">
-                                <span class="text-xs font-semibold text-orange-600 bg-orange-50 dark:bg-orange-900/20 dark:text-orange-400 px-2 py-1 rounded">
-                                    {{ deal.tag }}
+                                <span class="text-xs font-semibold text-orange-600 bg-orange-50 dark:bg-orange-900/20 dark:text-orange-400 px-2 py-1 rounded uppercase">
+                                    {{ deal.type }}
                                 </span>
                                 <button class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-600">
                                     <i class="pi pi-pencil text-xs"></i>
@@ -99,56 +99,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import type { Deal } from '~/types';
+import { useDeals } from '~/composables/useDeals';
 
-interface Deal {
-    id: number;
-    title: string;
-    company: string;
-    value: number;
-    tag: string;
-    ownerInitials: string;
-    avatar?: string;
-}
-
-interface Stage {
-    id: string;
-    name: string;
-    deals: Deal[];
-}
-
-// Mock Data
-const stages = ref<Stage[]>([
-    {
-        id: 'new',
-        name: 'New Lead',
-        deals: [
-            { id: 1, title: 'Enterprise License', company: 'Acme Corp', value: 25000, tag: 'High Priority', ownerInitials: 'IZ' },
-            { id: 2, title: 'Consulting Project', company: 'Starlight Inc', value: 8500, tag: 'Inbound', ownerInitials: 'VT', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d' }
-        ]
-    },
-    {
-        id: 'contacted',
-        name: 'Contacted',
-        deals: [
-             { id: 3, title: 'Basic Subscription', company: 'TechStart', value: 1200, tag: 'Referral', ownerInitials: 'IZ' }
-        ]
-    },
-    {
-        id: 'proposal',
-        name: 'Proposal Sent',
-        deals: [
-             { id: 4, title: 'Q1 Partnership', company: 'Global Dynamics', value: 150000, tag: 'Strategic', ownerInitials: 'IZ' },
-             { id: 5, title: 'Training Workshop', company: 'EduCare', value: 4500, tag: 'Upsell', ownerInitials: 'VT' }
-        ]
-    },
-    {
-        id: 'won',
-        name: 'Closed Won',
-        deals: [
-             { id: 6, title: 'Data Migration', company: 'CloudSystems', value: 12000, tag: 'Project', ownerInitials: 'IZ' }
-        ]
-    }
-]);
+const { stages, moveDeal } = useDeals();
 
 // Drag and Drop Logic
 const draggedDeal = ref<{ deal: Deal; sourceStageId: string } | null>(null);
@@ -160,7 +114,6 @@ const onDragStart = (event: DragEvent, deal: Deal, stageId: string) => {
     if (event.dataTransfer) {
         event.dataTransfer.effectAllowed = 'move';
         event.dataTransfer.dropEffect = 'move';
-        // Optional: Set custom drag image if needed
     }
 };
 
@@ -169,19 +122,7 @@ const onDrop = (event: DragEvent, targetStageId: string) => {
 
     const { deal, sourceStageId } = draggedDeal.value;
 
-    if (sourceStageId === targetStageId) return;
-
-    // Remove from source
-    const sourceStage = stages.value.find(s => s.id === sourceStageId);
-    if (sourceStage) {
-        sourceStage.deals = sourceStage.deals.filter(d => d.id !== deal.id);
-    }
-
-    // Add to target
-    const targetStage = stages.value.find(s => s.id === targetStageId);
-    if (targetStage) {
-        targetStage.deals.push(deal);
-    }
+    moveDeal(deal, sourceStageId, targetStageId);
 
     // Reset
     draggedDeal.value = null;
