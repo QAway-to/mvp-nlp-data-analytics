@@ -65,27 +65,27 @@
                     @dragenter.prevent
                     @drop="onDrop($event, col.id)"
                 >
-                    <!-- Column Header -->
-                    <div class="flex-none p-3 border-t-4 rounded-t-xl bg-white dark:bg-slate-800 shadow-sm border-x border-b border-slate-200 dark:border-slate-700"
-                         :style="{ borderTopColor: col.color }"
-                    >
                 <!-- Column Header -->
-                <div class="flex items-center justify-between mb-3 px-1">
-                    <div class="flex items-center gap-2">
-                        <h3 class="font-bold text-slate-700 dark:text-slate-200">{{ col.label }}</h3>
-                        <span class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-xs font-bold px-2 py-0.5 rounded-full">{{ col.deals_count }}</span>
+                <div class="flex-none p-3 border-t-4 rounded-t-xl bg-white dark:bg-slate-800 shadow-sm border-x border-b border-slate-200 dark:border-slate-700"
+                        :style="{ borderTopColor: col.color }"
+                >
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-bold text-slate-700 dark:text-slate-200">{{ col.label }}</h3>
+                            <span class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-xs font-bold px-2 py-0.5 rounded-full">{{ col.deals_count }}</span>
+                        </div>
+                        <!-- Add Deal Button (Only for first column) -->
+                        <button v-if="col.id === 'new'" class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 transition-colors" title="Quick Add">
+                            <i class="pi pi-plus text-xs"></i>
+                        </button>
+                        <button v-else class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 transition-colors opacity-0 cursor-default">
+                            <i class="pi pi-plus text-xs"></i>
+                        </button>
                     </div>
-                    <!-- Add Deal Button (Only for first column) -->
-                    <button v-if="col.id === 'new'" class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 transition-colors" title="Quick Add">
-                        <i class="pi pi-plus text-xs"></i>
-                    </button>
-                    <button v-else class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 transition-colors opacity-0 cursor-default">
-                        <i class="pi pi-plus text-xs"></i>
-                    </button>
-                </div>
 
-                <!-- Column Settings / Sort (Optional) -->
-                <div class="h-1 w-full rounded-full mb-3" :style="{ backgroundColor: col.color || '#cbd5e1' }"></div>
+                    <!-- Column Settings / Sort (Optional) -->
+                    <div class="h-1 w-full rounded-full mb-3" :style="{ backgroundColor: col.color || '#cbd5e1' }"></div>
+                </div>
 
                 <!-- Layout for cards (Scrollable) -->
                 <div class="flex-1 overflow-y-auto p-2 space-y-3 custom-scrollbar">
