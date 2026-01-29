@@ -73,7 +73,7 @@ export interface Deal {
     value: number;
     currency: string;
     status: 'new' | 'contacted' | 'proposal' | 'won' | 'lost';
-    type: 'inbound' | 'outbound' | 'strategic' | 'referral';
+    type: 'B2B' | 'B2C';
     manager_id: string; // UUID
     created_at: Date;
     nlp_analysis?: {
