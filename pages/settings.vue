@@ -40,20 +40,20 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-1">
                         <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Display Name</label>
-                        <input type="text" value="Ilya Zaigralov" class="w-full px-3 py-2 rounded-lg border border-here-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-here-purple-500 focus:border-transparent outline-none text-slate-900" />
+                        <input v-model="form.displayName" type="text" class="w-full px-3 py-2 rounded-lg border border-here-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-here-purple-500 focus:border-transparent outline-none text-slate-900" />
                     </div>
                     <div class="space-y-1">
                         <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Role</label>
-                        <input type="text" value="Partner" disabled class="w-full px-3 py-2 rounded-lg border border-here-gray-200 dark:border-slate-600 bg-here-gray-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 cursor-not-allowed" />
+                        <input type="text" :value="userProfile.role" disabled class="w-full px-3 py-2 rounded-lg border border-here-gray-200 dark:border-slate-600 bg-here-gray-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 cursor-not-allowed" />
                     </div>
                 </div>
                  <div class="space-y-1">
                     <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Email Address</label>
-                    <input type="email" value="ilya@example.com" class="w-full px-3 py-2 rounded-lg border border-here-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-here-purple-500 focus:border-transparent outline-none text-slate-900" />
+                    <input v-model="form.email" type="email" class="w-full px-3 py-2 rounded-lg border border-here-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-here-purple-500 focus:border-transparent outline-none text-slate-900" />
                 </div>
             </div>
             <div class="px-6 py-4 bg-here-gray-50 dark:bg-slate-900/50 flex justify-end">
-                <button class="px-4 py-2 bg-here-purple-600 text-white rounded-lg font-medium hover:bg-here-purple-700 transition-colors shadow-sm">
+                <button @click="saveProfile" class="px-4 py-2 bg-here-purple-600 text-white rounded-lg font-medium hover:bg-here-purple-700 transition-colors shadow-sm">
                     Save Changes
                 </button>
             </div>
@@ -90,11 +90,26 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useDataAnalysis } from '~/composables/useDataAnalysis';
 import { useTheme } from '~/composables/useTheme';
+import { useUserProfile } from '~/composables/useUserProfile';
 
 const { savedReports, savedDatasets } = useDataAnalysis();
 const { isDark, toggleDark } = useTheme();
+const { userProfile } = useUserProfile();
+
+// Local state for form (to allow "Cancel" or explicit "Save")
+const form = ref({
+    displayName: userProfile.value.displayName,
+    email: userProfile.value.email
+});
+
+const saveProfile = () => {
+    userProfile.value.displayName = form.value.displayName;
+    userProfile.value.email = form.value.email;
+    alert('Profile updated successfully!');
+};
 
 const clearReports = () => {
     if (confirm('Are you sure you want to delete all reports?')) {
@@ -104,7 +119,7 @@ const clearReports = () => {
 };
 
 const factoryReset = () => {
-    if (confirm('DANGER: This will delete ALL data. Continue?')) {
+    if (confirm('DANGER: This will delete ALL data (Reports, Datasets, Profile). Continue?')) {
         savedReports.value = [];
         savedDatasets.value = [];
         localStorage.clear();

@@ -22,7 +22,12 @@
         <div class="flex-1 overflow-x-auto pb-4">
              <div class="inline-flex h-full gap-6 align-top">
                 <!-- Column -->
-                <div v-for="col in stages" :key="col.id" class="w-80 flex-shrink-0 flex flex-col">
+                <div v-for="col in stages" :key="col.id" 
+                    class="w-80 flex-shrink-0 flex flex-col"
+                    @dragover.prevent 
+                    @dragenter.prevent
+                    @drop="onDrop($event, col.id)"
+                >
                     <!-- Header -->
                     <div class="flex items-center justify-between mb-3 px-1">
                         <div class="flex items-center gap-2">
@@ -35,9 +40,13 @@
                     </div>
 
                     <!-- Layout for cards -->
-                    <div class="flex-1 bg-slate-100/50 dark:bg-slate-800/50 rounded-xl p-3 space-y-3">
+                    <div class="flex-1 bg-slate-100/50 dark:bg-slate-800/50 rounded-xl p-3 space-y-3 transition-colors"
+                        :class="{'ring-2 ring-here-purple-200 dark:ring-here-purple-900 bg-here-purple-50/20 dark:bg-here-purple-900/20': draggedDeal && draggedDeal.sourceStageId !== col.id}"
+                    >
                          <div v-for="deal in col.deals" :key="deal.id" 
                             class="group bg-white dark:bg-slate-800 p-4 rounded-lg border border-transparent hover:border-here-purple-300 dark:hover:border-here-purple-700 shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing"
+                            draggable="true"
+                            @dragstart="onDragStart($event, deal, col.id)"
                          >
                             <div class="flex justify-between items-start mb-2">
                                 <span class="text-xs font-semibold text-orange-600 bg-orange-50 dark:bg-orange-900/20 dark:text-orange-400 px-2 py-1 rounded">
@@ -74,8 +83,24 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
+interface Deal {
+    id: number;
+    title: string;
+    company: string;
+    value: number;
+    tag: string;
+    ownerInitials: string;
+    avatar?: string;
+}
+
+interface Stage {
+    id: string;
+    name: string;
+    deals: Deal[];
+}
+
 // Mock Data
-const stages = ref([
+const stages = ref<Stage[]>([
     {
         id: 'new',
         name: 'New Lead',
@@ -107,4 +132,41 @@ const stages = ref([
         ]
     }
 ]);
+
+// Drag and Drop Logic
+const draggedDeal = ref<{ deal: Deal; sourceStageId: string } | null>(null);
+
+const onDragStart = (event: DragEvent, deal: Deal, stageId: string) => {
+    draggedDeal.value = { deal, sourceStageId: stageId };
+    
+    // Set drag effect
+    if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.dropEffect = 'move';
+        // Optional: Set custom drag image if needed
+    }
+};
+
+const onDrop = (event: DragEvent, targetStageId: string) => {
+    if (!draggedDeal.value) return;
+
+    const { deal, sourceStageId } = draggedDeal.value;
+
+    if (sourceStageId === targetStageId) return;
+
+    // Remove from source
+    const sourceStage = stages.value.find(s => s.id === sourceStageId);
+    if (sourceStage) {
+        sourceStage.deals = sourceStage.deals.filter(d => d.id !== deal.id);
+    }
+
+    // Add to target
+    const targetStage = stages.value.find(s => s.id === targetStageId);
+    if (targetStage) {
+        targetStage.deals.push(deal);
+    }
+
+    // Reset
+    draggedDeal.value = null;
+};
 </script>
