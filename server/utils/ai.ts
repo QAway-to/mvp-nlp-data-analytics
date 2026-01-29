@@ -1,5 +1,4 @@
-import { google } from '@ai-sdk/google';
-import { generateText } from 'ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 interface GeminiResponse {
     type: 'statistics' | 'visualization' | 'correlations' | 'sql' | 'text';
@@ -47,9 +46,14 @@ function generateSchemaDescription(schema: string[], sampleData: any[]) {
 export async function processNLQuery(query: string, dataSchema: string[], sampleData: any[]): Promise<GeminiResponse> {
     try {
         console.log('[Gemini] Processing query:', query);
-        validateApiKey();
+        const apiKey = validateApiKey();
 
-        const model = google('models/gemini-2.5-flash');
+        // 1. Initialize official SDK
+        const genAI = new GoogleGenerativeAI(apiKey);
+
+        // 2. Use the specific model requested
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
         const schemaDescription = generateSchemaDescription(dataSchema, sampleData);
 
         const prompt = `Ты - эксперт по анализу данных. Пользователь задал вопрос о данных.
@@ -67,7 +71,7 @@ ${JSON.stringify(sampleData.slice(0, 3), null, 2)}
 2. Определи тип анализа (statistics, visualization, correlations, anomalies).
 3. Дай понятное объяснение и инсайты.
 
-Верни ТОЛЬКО валидный JSON:
+Верни ТОЛЬКО валидный JSON (без Markdown форматирования):
 {
   "type": "statistics" | "visualization" | "correlations" | "sql" | "text",
   "statistics": ["mean", "count", ...] (если type="statistics"),
@@ -88,12 +92,16 @@ ${JSON.stringify(sampleData.slice(0, 3), null, 2)}
   ]
 }`;
 
-        const { text } = await generateText({
-            model: model,
-            prompt: prompt,
-        });
+        // 3. Generate content
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
 
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        // 4. Clean and parse JSON
+        // Gemini sometimes adds backticks like ```json ... ```
+        const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+        const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
             return JSON.parse(jsonMatch[0]) as GeminiResponse;
         }
@@ -101,7 +109,7 @@ ${JSON.stringify(sampleData.slice(0, 3), null, 2)}
         return {
             type: 'text',
             message: text,
-            description: 'Анализ выполнен'
+            description: 'Анализ выполнен (JSON не распознан)'
         };
 
     } catch (error: any) {
