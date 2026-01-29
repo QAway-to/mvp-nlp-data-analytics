@@ -15,6 +15,7 @@ export const useDataAnalysis = () => {
 
     // Persistence
     const savedReports = useLocalStorage<SavedReport[]>('here-crm-reports', []);
+    const savedDatasets = useLocalStorage<SavedDataset[]>('here-crm-datasets', []);
 
     const totalRows = computed(() => data.value.length);
     const numericColumns = computed(() => {
@@ -133,6 +134,28 @@ export const useDataAnalysis = () => {
         analysisResult.value = report.result;
     };
 
+    const saveDataset = (name: string) => {
+        if (!data.value.length) return;
+        savedDatasets.value.push({
+            id: crypto.randomUUID(),
+            name: name || `Dataset ${new Date().toLocaleDateString()}`,
+            date: new Date().toISOString(),
+            data: data.value,
+            columns: columns.value
+        });
+    };
+
+    const deleteDataset = (id: string) => {
+        savedDatasets.value = savedDatasets.value.filter(d => d.id !== id);
+    };
+
+    const loadDataset = (dataset: SavedDataset) => {
+        data.value = dataset.data;
+        columns.value = dataset.columns;
+        analysisResult.value = null; // Reset analysis when loading new data
+        error.value = null;
+    };
+
     return {
         data,
         columns,
@@ -147,6 +170,10 @@ export const useDataAnalysis = () => {
         processQuery,
         saveCurrentReport,
         deleteReport,
-        loadReport
+        loadReport,
+        savedDatasets,
+        saveDataset,
+        deleteDataset,
+        loadDataset
     };
 };

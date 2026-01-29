@@ -50,6 +50,14 @@ export interface SavedReport {
     projectId?: string;
 }
 
+export interface SavedDataset {
+    id: string;
+    name: string;
+    date: string;
+    data: any[];
+    columns: string[];
+}
+
 export interface QueryHistoryItem {
     id: number;
     query: string;

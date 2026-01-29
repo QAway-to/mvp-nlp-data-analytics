@@ -2,6 +2,12 @@
     <div class="space-y-6">
         <!-- Top Stats Row -->
         <section v-if="totalRows > 0" class="animate-fade-in-up">
+            <div class="flex justify-end mb-4">
+                 <button @click="openSaveDatasetDialog" class="text-sm text-slate-500 hover:text-here-purple-600 font-medium flex items-center gap-2 transition-colors">
+                    <i class="pi pi-bookmark"></i>
+                    Save this Dataset
+                </button>
+            </div>
             <StatsWidget 
                 :total-rows="totalRows" 
                 :columns="columns" 
@@ -98,15 +104,23 @@ const {
     queryHistory,
     handleFileUpload, 
     processQuery,
-    saveCurrentReport
+    saveCurrentReport,
+    saveDataset
 } = useDataAnalysis();
 
 const openSaveDialog = () => {
-    // Simple prompt for MVP, better would be a PrimeVue Dialog
     const title = prompt('Enter a title for this report:', `Analysis ${new Date().toLocaleTimeString()}`);
     if (title) {
         saveCurrentReport(title);
-        alert('Report saved!'); // Replace with toast later
+        alert('Report saved!');
+    }
+};
+
+const openSaveDatasetDialog = () => {
+    const name = prompt('Enter a name for this dataset:', `Dataset ${new Date().toLocaleDateString()}`);
+    if (name) {
+        saveDataset(name);
+        alert('Dataset saved!');
     }
 };
 </script>

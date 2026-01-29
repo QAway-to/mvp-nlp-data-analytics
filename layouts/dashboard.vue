@@ -27,10 +27,12 @@
                     Dashboard
                 </router-link>
                 
-                <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all group">
-                    <i class="pi pi-folder text-slate-400 group-hover:text-slate-600"></i>
+                <router-link to="/datasets" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group"
+                    :class="route.path === '/datasets' ? 'bg-here-purple-50 text-here-purple-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="pi pi-folder" :class="route.path === '/datasets' ? 'text-here-purple-600' : 'text-slate-400 group-hover:text-slate-600'"></i>
                     My Datasets
-                </a>
+                </router-link>
 
                 <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-3 mt-8">
                     Analytics
@@ -45,16 +47,16 @@
 
             <!-- Bottom User -->
              <div class="p-4 border-t border-here-gray-100">
-                <div class="flex items-center gap-3 px-2 py-2 cursor-pointer hover:bg-slate-50 rounded-lg transition-colors">
+                <router-link to="/settings" class="flex items-center gap-3 px-2 py-2 cursor-pointer hover:bg-slate-50 rounded-lg transition-colors">
                     <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-medium text-sm">
                         IZ
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="text-sm font-semibold text-slate-900 truncate">Ilya Zaigralov</div>
-                        <div class="text-xs text-slate-500 truncate">Partner</div>
+                        <div class="text-xs text-slate-500 truncate">Settings</div>
                     </div>
-                    <i class="pi pi-ellipsis-v text-slate-400 text-xs"></i>
-                </div>
+                    <i class="pi pi-cog text-slate-400 text-xs"></i>
+                </router-link>
             </div>
         </aside>
 
