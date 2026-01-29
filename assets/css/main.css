@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-color: #6366f1;
+  --bg-dark: #0f172a;
+  --bg-card: #1e1f33;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #11162a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+
+/* PrimeVue Overrides for Dark Mode integration */
+.p-card {
+    background: var(--bg-card);
+    color: var(--text-main);
+    border: 1px solid rgba(59,130,246,0.15);
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+    background: #11162a;
+    color: var(--text-main);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.p-datatable .p-datatable-tbody > tr {
+    background: var(--bg-card);
+    color: var(--text-muted);
+}
+
+.p-datatable .p-datatable-tbody > tr:hover {
+    background: #2d2f45 !important;
+}
+
+.p-component, .p-component * {
+    font-family: inherit;
+}

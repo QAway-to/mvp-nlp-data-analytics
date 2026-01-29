@@ -1,46 +1,75 @@
-# 📊 NLP Data Analytics MVP
+# Nuxt Minimal Starter
 
-Веб-приложение для анализа данных через естественный язык. Пользователь загружает CSV/Excel файлы или подключает локальную БД, после чего может задавать текстовые вопросы на человеческом языке для получения аналитики, графиков и статистики.
+Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
-## 🚀 Возможности
+## Setup
 
-- **📁 Загрузка данных**: CSV и Excel файлы через веб-интерфейс
-- **💬 NL запросы**: Анализ данных через текстовые вопросы
-- **📊 Визуализация**: Автоматическая генерация графиков и диаграмм
-- **🔍 Статистика**: Фильтрация, сортировка и группировка данных
-- **🗄️ SQLite**: Подключение к существующим базам данных
-- **⚡ Оффлайн**: Все данные обрабатываются локально
-
-## 🛠️ Технологии
-
-- **Frontend**: Next.js 14, React 18, Recharts
-- **Backend**: Python FastAPI (опционально)
-- **База данных**: SQLite (in-memory и файловая)
-- **LLM**: Ollama с локальными моделями (в будущем)
-
-## 📦 Установка
+Make sure to install dependencies:
 
 ```bash
+# npm
 npm install
-npm run dev
+
+# pnpm
+pnpm install
+
+# yarn
+yarn install
+
+# bun
+bun install
 ```
 
-Откройте [http://localhost:3000](http://localhost:3000)
+## Development Server
 
-## 🎯 Использование
+Start the development server on `http://localhost:3000`:
 
-1. Загрузите CSV/Excel файл или подключите SQLite БД
-2. Задайте вопрос на естественном языке
-3. Получите аналитику, графики и статистику
+```bash
+# npm
+npm run dev
 
-## 📝 Примеры запросов
+# pnpm
+pnpm dev
 
-- "Покажи средние продажи по месяцам"
-- "Создай график распределения по категориям"
-- "Найди аномалии в данных"
-- "Сколько пропущенных значений?"
+# yarn
+yarn dev
 
----
+# bun
+bun run dev
+```
 
-**Сгенерировано Agent B** 🚀
+## Production
 
+Build the application for production:
+
+```bash
+# npm
+npm run build
+
+# pnpm
+pnpm build
+
+# yarn
+yarn build
+
+# bun
+bun run build
+```
+
+Locally preview production build:
+
+```bash
+# npm
+npm run preview
+
+# pnpm
+pnpm preview
+
+# yarn
+yarn preview
+
+# bun
+bun run preview
+```
+
+Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
