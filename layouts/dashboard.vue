@@ -104,6 +104,12 @@
                 </div>
 
                 <div class="flex items-center gap-3">
+                    <div class="hidden md:flex items-center text-xs text-slate-400 mr-2 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded border border-slate-200 dark:border-slate-600 cursor-pointer hover:border-slate-300 transition-colors" @click="isSearchOpen = true">
+                        <i class="pi pi-search mr-1.5"></i>
+                        <span>Search...</span>
+                        <span class="ml-2 font-mono bg-white dark:bg-slate-600 px-1 rounded border border-slate-200 dark:border-slate-500">Ctrl K</span>
+                    </div>
+
                      <button class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-here-purple-600 dark:text-here-purple-400 bg-here-purple-50 dark:bg-here-purple-900/30 rounded-lg hover:bg-here-purple-100 dark:hover:bg-here-purple-900/50 transition-colors">
                         <i class="pi pi-plus text-xs"></i>
                         <span>New Report</span>
@@ -157,6 +163,9 @@
             <!-- Global Toast -->
             <ToastNotification />
 
+            <!-- Command Palette -->
+            <CommandPalette :is-open="isSearchOpen" @close="isSearchOpen = false" />
+
             <!-- Page Content -->
             <main class="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
                 <slot />
@@ -166,13 +175,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useNotifications } from '~/composables/useNotifications';
 import ToastNotification from '~/components/ui/ToastNotification.vue';
+import CommandPalette from '~/components/ui/CommandPalette.vue';
 
 const isSidebarOpen = ref(false);
 const route = useRoute();
+
+// Search
+const isSearchOpen = ref(false);
+
+const handleKeydown = (e: KeyboardEvent) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        isSearchOpen.value = true;
+    }
+};
 
 // Notifications
 const { notifications, unreadCount, markAsRead, markAllAsRead, startDemoNotifications } = useNotifications();
@@ -182,8 +202,13 @@ const toggleNotifications = () => {
     showNotifications.value = !showNotifications.value;
 };
 
-// Close dropdown when clicking outside (simple version)
+// Lifecycle
 onMounted(() => {
     startDemoNotifications();
+    window.addEventListener('keydown', handleKeydown);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeydown);
 });
 </script>

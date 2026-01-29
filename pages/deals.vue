@@ -25,7 +25,7 @@
                      <button class="flex items-center gap-2 px-3 py-2 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm text-sm font-medium">
                         <i class="pi pi-cog"></i>
                     </button>
-                    <button class="flex items-center gap-2 px-3 py-2 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm text-sm font-medium">
+                    <button @click="triggerGlobalSearch" class="flex items-center gap-2 px-3 py-2 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm text-sm font-medium">
                         <i class="pi pi-search"></i>
                         <span class="hidden sm:inline">Search</span>
                     </button>
@@ -445,6 +445,11 @@ const removeProduct = (idx: number) => {
     dealProducts.value.splice(idx, 1);
 };
 
+
+// Actions
+const triggerGlobalSearch = () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, metaKey: true }));
+};
 
 // Drag and Drop Logic
 const draggedDeal = ref<{ deal: Deal; sourceStageId: string } | null>(null);
