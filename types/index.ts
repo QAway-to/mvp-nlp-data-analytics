@@ -81,6 +81,14 @@ export interface Deal {
         summary_sentiment: 'positive' | 'neutral' | 'negative';
         [key: string]: any;
     };
+    // CRM Fields
+    contact_name?: string;
+    contact_email?: string;
+    contact_phone?: string;
+    last_activity_date?: Date;
+    next_activity_date?: Date;
+    next_activity_type?: 'call' | 'email' | 'meeting' | 'task';
+    probability?: number; // 0-100
     // UI Helpers (Optional)
     avatar?: string;
     ownerInitials?: string;
@@ -90,6 +98,7 @@ export interface PipelineColumn {
     id: string;
     label: string;
     deals_count: number;
+    color: string; // HEX color for stage
     // UI Helper
     deals: Deal[];
 }
