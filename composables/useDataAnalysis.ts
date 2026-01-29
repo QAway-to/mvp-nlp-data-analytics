@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue';
 import Papa from 'papaparse';
-import Papa from 'papaparse';
+
 
 export interface DataColumn {
     name: string;
