@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue';
 import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
+import Papa from 'papaparse';
 
 export interface DataColumn {
     name: string;
@@ -47,8 +47,9 @@ export const useDataAnalysis = () => {
                 });
             } else if (file.name.match(/\.xlsx?$/)) {
                 const reader = new FileReader();
-                reader.onload = (e) => {
+                reader.onload = async (e) => {
                     try {
+                        const XLSX = await import('xlsx');
                         const bstr = e.target?.result;
                         const wb = XLSX.read(bstr, { type: 'binary' });
                         const wsname = wb.SheetNames[0];
