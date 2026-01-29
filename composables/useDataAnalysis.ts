@@ -88,7 +88,7 @@ export const useDataAnalysis = () => {
         error.value = null;
 
         try {
-            const result = await $fetch('/api/query', {
+            const result = await $fetch<AnalysisResult>('/api/query', {
                 method: 'POST',
                 body: {
                     query: queryText,
