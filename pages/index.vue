@@ -16,33 +16,33 @@
         </section>
 
         <!-- Main Workspace -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-12rem)]">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-12rem)] overflow-hidden">
             <!-- Left Column: Chat & Settings -->
-            <div class="lg:col-span-3 space-y-6 h-full flex flex-col">
+            <div class="lg:col-span-3 space-y-6 h-full flex flex-col overflow-y-auto custom-scrollbar pr-1">
                  <!-- File Upload (Initial State) -->
-                <div v-if="totalRows === 0" class="p-10 rounded-2xl bg-white dark:bg-slate-800 border-2 border-dashed border-here-gray-200 dark:border-slate-700 hover:border-here-purple-400 dark:hover:border-here-purple-500 transition-all text-center group shadow-sm">
-                    <div class="w-16 h-16 rounded-full bg-here-purple-50 dark:bg-here-purple-900/20 mx-auto flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i class="pi pi-cloud-upload text-2xl text-here-purple-600 dark:text-here-purple-400"></i>
+                <div v-if="totalRows === 0" class="p-8 rounded-2xl bg-white dark:bg-slate-800 border-2 border-dashed border-here-gray-200 dark:border-slate-700 hover:border-here-purple-400 dark:hover:border-here-purple-500 transition-all text-center group shadow-sm flex-none">
+                    <div class="w-12 h-12 rounded-full bg-here-purple-50 dark:bg-here-purple-900/20 mx-auto flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <i class="pi pi-cloud-upload text-xl text-here-purple-600 dark:text-here-purple-400"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Connect Data</h3>
-                    <p class="text-slate-500 dark:text-slate-400 text-sm mb-6">Drag & Drop or Click to upload CSV/Excel</p>
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">Connect Data</h3>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs mb-4">Drag & Drop or Click to upload</p>
                     <FileUploader @file-uploaded="handleFileUpload" />
                 </div>
 
                  <!-- Chat Widget (Sticky/Fixed) -->
-                <div v-else class="space-y-4 flex-1 flex flex-col">
+                <div v-else class="space-y-4 flex flex-col">
                     <ChatWidget :loading="isLoading" @submit="processQuery" class="flex-none" />
                     
                     <!-- Query History -->
-                    <div v-if="queryHistory.length > 0" class="flex-1 overflow-y-auto custom-scrollbar p-4 rounded-xl bg-white dark:bg-slate-800 border border-here-gray-200 dark:border-slate-700 shadow-sm">
-                        <h4 class="text-xs font-bold text-slate-400 uppercase mb-3 px-1">Recent Queries</h4>
+                    <div v-if="queryHistory.length > 0" class="flex-none max-h-64 overflow-y-auto custom-scrollbar p-3 rounded-xl bg-white dark:bg-slate-800 border border-here-gray-200 dark:border-slate-700 shadow-sm">
+                        <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-2 px-1">Recent Queries</h4>
                         <div class="space-y-1">
-                             <div v-for="item in queryHistory.slice(0, 10)" :key="item.id" 
-                                class="p-2.5 rounded-lg hover:bg-here-gray-50 dark:hover:bg-slate-700 cursor-pointer transition-colors text-sm text-slate-600 dark:text-slate-300 flex items-center justify-between group"
+                             <div v-for="item in queryHistory.slice(0, 5)" :key="item.id" 
+                                class="p-2 rounded-lg hover:bg-here-gray-50 dark:hover:bg-slate-700 cursor-pointer transition-colors text-xs text-slate-600 dark:text-slate-300 flex items-center justify-between group"
                                 @click="processQuery(item.query)"
                             >
                                 <span class="truncate font-medium">{{ item.query }}</span>
-                                <i class="pi pi-arrow-right opacity-0 group-hover:opacity-100 text-xs text-here-purple-500"></i>
+                                <i class="pi pi-arrow-right opacity-0 group-hover:opacity-100 text-[10px] text-here-purple-500"></i>
                             </div>
                         </div>
                     </div>
@@ -50,28 +50,28 @@
             </div>
 
             <!-- Middle Column: Results & Visualization -->
-            <div class="lg:col-span-6 space-y-6 h-full overflow-y-auto custom-scrollbar pr-2">
+            <div class="lg:col-span-6 space-y-6 h-full overflow-y-auto custom-scrollbar px-1">
                  <!-- Initial Empty State -->
                 <div v-if="!analysisResult && totalRows > 0 && !isLoading" class="h-full rounded-2xl bg-white dark:bg-slate-800 border border-here-gray-200 dark:border-slate-700 border-dashed flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
-                    <div class="w-20 h-20 rounded-full bg-here-gray-50 dark:bg-slate-700 flex items-center justify-center mb-4">
-                        <i class="pi pi-sparkles text-3xl text-slate-300 dark:text-slate-500"></i>
+                    <div class="w-16 h-16 rounded-full bg-here-gray-50 dark:bg-slate-700 flex items-center justify-center mb-3">
+                        <i class="pi pi-sparkles text-2xl text-slate-300 dark:text-slate-500"></i>
                     </div>
-                    <p class="font-medium">AI Insights will appear here</p>
+                    <p class="font-medium text-sm">AI Insights will appear here</p>
                 </div>
 
                 <!-- Loading State -->
-                <div v-if="isLoading" class="h-96 rounded-2xl bg-white dark:bg-slate-800 border border-here-gray-200 dark:border-slate-700 shadow-sm flex items-center justify-center">
-                    <div class="flex flex-col items-center gap-4">
-                        <i class="pi pi-spin pi-spinner text-here-purple-600 dark:text-here-purple-400 text-4xl"></i>
-                        <span class="text-slate-500 dark:text-slate-400 text-sm font-medium animate-pulse">Analyzing data structures...</span>
+                <div v-if="isLoading" class="h-80 rounded-2xl bg-white dark:bg-slate-800 border border-here-gray-200 dark:border-slate-700 shadow-sm flex items-center justify-center">
+                    <div class="flex flex-col items-center gap-3">
+                        <i class="pi pi-spin pi-spinner text-here-purple-600 dark:text-here-purple-400 text-3xl"></i>
+                        <span class="text-slate-500 dark:text-slate-400 text-xs font-medium animate-pulse">Analyzing...</span>
                     </div>
                 </div>
 
                 <!-- Results Panel -->
                 <div v-if="analysisResult && !isLoading" class="space-y-4">
                      <div class="flex items-center justify-between">
-                        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Analysis Results</h2>
-                        <button @click="openSaveDialog" class="text-sm text-here-purple-600 dark:text-here-purple-400 hover:text-here-purple-700 dark:hover:text-here-purple-300 font-medium flex items-center gap-2">
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white">Analysis Results</h2>
+                        <button @click="openSaveDialog" class="text-xs text-here-purple-600 dark:text-here-purple-400 hover:text-here-purple-700 dark:hover:text-here-purple-300 font-medium flex items-center gap-1.5">
                             <i class="pi pi-save"></i>
                             Save to Reports
                         </button>
@@ -80,14 +80,14 @@
                 </div>
                 
                 <!-- Error State -->
-                <div v-if="error" class="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 flex items-center gap-3">
-                     <i class="pi pi-exclamation-circle text-xl"></i>
+                <div v-if="error" class="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 flex items-center gap-2 text-sm">
+                     <i class="pi pi-exclamation-circle text-lg"></i>
                      <span class="font-medium">{{ error }}</span>
                 </div>
             </div>
 
             <!-- Right Column: Activity Feed -->
-            <div class="lg:col-span-3 h-full">
+            <div class="lg:col-span-3 h-full overflow-hidden">
                 <ActivityFeed />
             </div>
         </div>
