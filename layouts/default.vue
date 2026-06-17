@@ -31,9 +31,9 @@
             </nav>
           </div>
           <div class="flex items-center gap-4">
-             <a href="https://github.com/QAway-to/mvp-nlp-data-analytics" target="_blank" class="text-slate-400 hover:text-white transition-colors">
-                <i class="pi pi-github text-xl"></i>
-             </a>
+            <a href="https://github.com/QAway-to/mvp-nlp-data-analytics" target="_blank" class="text-slate-400 hover:text-white transition-colors">
+              <i class="pi pi-github text-xl"></i>
+            </a>
           </div>
         </div>
       </div>
@@ -44,9 +44,9 @@
     </main>
 
     <footer class="border-t border-white/5 mt-auto py-8 bg-slate-900">
-        <div class="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm">
-            Powered by Vercel AI SDK & Gemini 2.5
-        </div>
+      <div class="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm">
+        Powered by OpenRouter AI &amp; NLP Lead Generation
+      </div>
     </footer>
   </div>
 </template>
