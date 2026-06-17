@@ -1,7 +1,8 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import type { Lead } from '~/types'
 
 const CHANNEL_RE = /^[a-zA-Z0-9_]{1,32}$/
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
+const OPENROUTER_MODEL = 'openai/gpt-oss-120b:free'
 
 function scoreLocally(lead: Partial<Lead>): number {
   let s = 0
@@ -31,11 +32,67 @@ function parseMessages(html: string): { text: string; url: string | null }[] {
   const urls = [...html.matchAll(urlRe)].map(m => m[1])
 
   if (!texts.length) {
-    console.warn('[scrape] No messages parsed from HTML — channel may be private or empty')
+    console.warn('[scrape] No messages parsed — channel may be private or empty')
   }
 
   texts.forEach((text, i) => out.push({ text, url: urls[i] ?? null }))
   return out.slice(0, 50)
+}
+
+async function extractLeadsViaOpenRouter(messages: { text: string; url: string | null }[], apiKey: string): Promise<any[]> {
+  const prompt = `Extract potential sales leads from these Telegram channel messages.
+Return ONLY a valid JSON array. Each object must have:
+  messageIndex (number), name (string|null), email (string|null), phone (string|null),
+  username (string|null — Telegram @handle if mentioned in the text), company (string|null),
+  intent ("high"|"medium"|"low"|"none")
+
+intent guide:
+  high   = person explicitly searching for a product/service/contractor
+  medium = mentions a pain point or need that implies they might buy
+  low    = loosely related, could be a lead with outreach
+  none   = no lead signal at all
+
+If no leads found return []. Respond with ONLY the JSON array, no markdown, no explanation.
+
+Messages:
+${messages.map((m, i) => `[${i}] ${m.text}`).join('\n---\n')}`
+
+  const res = await fetch(OPENROUTER_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: OPENROUTER_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      response_format: { type: 'json_object' },
+    }),
+  })
+
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`OpenRouter API error ${res.status}: ${err.slice(0, 200)}`)
+  }
+
+  const data = await res.json() as any
+  const content: string = data?.choices?.[0]?.message?.content ?? '[]'
+
+  try {
+    const parsed = JSON.parse(content.trim().replace(/^```json\n?/, '').replace(/\n?```$/, ''))
+    // OpenRouter may wrap in { leads: [...] } due to json_object mode
+    if (Array.isArray(parsed)) return parsed
+    if (Array.isArray(parsed?.leads)) return parsed.leads
+    if (Array.isArray(parsed?.data)) return parsed.data
+    return []
+  } catch {
+    // Try to find array in the response
+    const match = content.match(/\[[\s\S]*\]/)
+    if (match) {
+      try { return JSON.parse(match[0]) } catch { return [] }
+    }
+    return []
+  }
 }
 
 export default defineEventHandler(async (event) => {
@@ -56,7 +113,7 @@ export default defineEventHandler(async (event) => {
   }).catch(() => null)
 
   if (!res || !res.ok) {
-    throw createError({ statusCode: 404, message: `Channel @${name} not found or has no public messages` })
+    throw createError({ statusCode: 404, message: `Channel @${name} not found or unavailable` })
   }
 
   const html = await res.text()
@@ -69,39 +126,14 @@ export default defineEventHandler(async (event) => {
   if (!messages.length) return { leads: [], messagesScanned: 0 }
 
   const config = useRuntimeConfig()
-  const apiKey = (config.geminiApiKey || process.env.GEMINI_API_KEY) as string
-  if (!apiKey) throw createError({ statusCode: 500, message: 'GEMINI_API_KEY not configured' })
-
-  const genAI = new GoogleGenerativeAI(apiKey)
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-flash',
-    generationConfig: { responseMimeType: 'application/json' } as any
-  })
-
-  const prompt = `Extract potential sales leads from these Telegram channel messages.
-Return ONLY a valid JSON array. Each object must have:
-  messageIndex (number), name (string|null), email (string|null), phone (string|null),
-  username (string|null, Telegram @handle if mentioned), company (string|null),
-  intent ("high"|"medium"|"low"|"none")
-
-intent guide:
-  high   = person explicitly searching for a product/service/contractor
-  medium = mentions a pain point or need that implies they might buy
-  low    = loosely related, could be a lead with outreach
-  none   = no lead signal at all
-
-If no leads found: []. Respond with ONLY the JSON array.
-
-Messages:
-${messages.map((m, i) => `[${i}] ${m.text}`).join('\n---\n')}`
+  const apiKey = (config.openrouterApiKey || process.env.OPENROUTER_API_KEY) as string
+  if (!apiKey) throw createError({ statusCode: 500, message: 'OPENROUTER_API_KEY not configured' })
 
   let extracted: any[] = []
   try {
-    const result = await model.generateContent(prompt)
-    const raw = result.response.text().trim().replace(/^```json\n?/, '').replace(/\n?```$/, '')
-    const parsed = JSON.parse(raw)
-    extracted = Array.isArray(parsed) ? parsed : []
-  } catch {
+    extracted = await extractLeadsViaOpenRouter(messages, apiKey)
+  } catch (e: any) {
+    console.error('[scrape] OpenRouter error:', e?.message)
     extracted = []
   }
 
