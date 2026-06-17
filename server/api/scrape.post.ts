@@ -1,6 +1,8 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import type { Lead } from '~/types'
 
+const CHANNEL_RE = /^[a-zA-Z0-9_]{1,32}$/
+
 function scoreLocally(lead: Partial<Lead>): number {
   let s = 0
   if (lead.email || lead.phone || lead.username) s += 40
@@ -28,6 +30,10 @@ function parseMessages(html: string): { text: string; url: string | null }[] {
 
   const urls = [...html.matchAll(urlRe)].map(m => m[1])
 
+  if (!texts.length) {
+    console.warn('[scrape] No messages parsed from HTML — channel may be private or empty')
+  }
+
   texts.forEach((text, i) => out.push({ text, url: urls[i] ?? null }))
   return out.slice(0, 50)
 }
@@ -36,15 +42,27 @@ export default defineEventHandler(async (event) => {
   const { channel } = await readBody(event)
   if (!channel) throw createError({ statusCode: 400, message: 'Channel name required' })
 
-  const name = String(channel).replace('@', '').replace(/https?:\/\/t\.me\//,'').trim()
+  const name = String(channel)
+    .replace('@', '')
+    .replace(/https?:\/\/t\.me\//g, '')
+    .trim()
 
-  const html = await $fetch<string>(`https://t.me/s/${name}`, {
-    responseType: 'text',
+  if (!CHANNEL_RE.test(name)) {
+    throw createError({ statusCode: 400, message: 'Invalid channel name. Use only letters, numbers, underscores (max 32 chars).' })
+  }
+
+  const res = await fetch(`https://t.me/s/${name}`, {
     headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' }
   }).catch(() => null)
 
-  if (!html || html.includes('tgme_page_description') && !html.includes('tgme_widget_message_bubble')) {
+  if (!res || !res.ok) {
     throw createError({ statusCode: 404, message: `Channel @${name} not found or has no public messages` })
+  }
+
+  const html = await res.text()
+
+  if (!html.includes('tgme_widget_message_bubble')) {
+    throw createError({ statusCode: 404, message: `@${name} appears to be private or has no public messages` })
   }
 
   const messages = parseMessages(html)
@@ -79,8 +97,8 @@ ${messages.map((m, i) => `[${i}] ${m.text}`).join('\n---\n')}`
 
   let extracted: any[] = []
   try {
-    const res = await model.generateContent(prompt)
-    const raw = res.response.text().trim().replace(/^```json\n?/,'').replace(/\n?```$/,'')
+    const result = await model.generateContent(prompt)
+    const raw = result.response.text().trim().replace(/^```json\n?/, '').replace(/\n?```$/, '')
     const parsed = JSON.parse(raw)
     extracted = Array.isArray(parsed) ? parsed : []
   } catch {
@@ -97,7 +115,7 @@ ${messages.map((m, i) => `[${i}] ${m.text}`).join('\n---\n')}`
         phone: e.phone ?? null,
         username: e.username ?? null,
         company: e.company ?? null,
-        intent: ['high','medium','low','none'].includes(e.intent) ? e.intent : 'none',
+        intent: ['high', 'medium', 'low', 'none'].includes(e.intent) ? e.intent : 'none',
         rawMessage: messages[e.messageIndex].text,
         messageUrl: messages[e.messageIndex].url,
       }
