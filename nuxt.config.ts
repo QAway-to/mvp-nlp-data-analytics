@@ -18,17 +18,18 @@ export default defineNuxtConfig({
       theme: {
         preset: Aura,
         options: {
-          darkModeSelector: '.dark', // or 'system'
+          darkModeSelector: '.dark',
         }
       },
       ripple: true
     },
     components: {
-      exclude: ['Editor', 'Chart'] // Chart we might import manually or use via chart.js
+      exclude: ['Editor', 'Chart']
     }
   },
   runtimeConfig: {
     geminiApiKey: process.env.GEMINI_API_KEY,
+    openrouterApiKey: process.env.OPENROUTER_API_KEY,
     public: {
       // Public keys
     }
