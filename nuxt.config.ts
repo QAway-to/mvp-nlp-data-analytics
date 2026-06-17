@@ -28,11 +28,8 @@ export default defineNuxtConfig({
     }
   },
   runtimeConfig: {
-    geminiApiKey: process.env.GEMINI_API_KEY,
     openrouterApiKey: process.env.OPENROUTER_API_KEY,
-    public: {
-      // Public keys
-    }
+    public: {}
   },
   compatibilityDate: '2025-01-29',
 })
