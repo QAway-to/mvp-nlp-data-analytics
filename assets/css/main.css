@@ -3,41 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --primary-color: #7c3aed;
-  /* here-purple-600 */
+  --primary-color: #6366F1;
 }
 
 body {
-  background-color: #F9FAFB;
-  /* here-gray-50 */
-  color: #111827;
-  /* gray-900 */
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #0F172A;
+  color: #E2E8F0;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
 }
 
-/* Custom Scrollbar (Light) */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  /* slate-300 */
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-  /* slate-400 */
-}
-
-/* PrimeVue Overrides for Light Mode */
-.p-component,
-.p-component * {
-  font-family: inherit;
-}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1E1E2E; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #2D2D3E; }
