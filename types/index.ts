@@ -112,3 +112,29 @@ export interface AnalyticsReport {
     weighted_forecast: number;
     conversion_rate: number;
 }
+
+// ─── Lead Generation ──────────────────────────────────────────────────────────
+
+export interface Lead {
+  id: string
+  sourceChannel: string
+  name: string | null
+  email: string | null
+  phone: string | null
+  username: string | null
+  company: string | null
+  intent: 'high' | 'medium' | 'low' | 'none'
+  score: number
+  status: 'new' | 'contacted' | 'qualified' | 'rejected'
+  rawMessage: string
+  messageUrl: string | null
+  createdAt: string
+}
+
+export interface LeadSource {
+  channel: string
+  lastScrapedAt: string | null
+  leadCount: number
+  status: 'idle' | 'scraping' | 'error'
+  error?: string
+}
