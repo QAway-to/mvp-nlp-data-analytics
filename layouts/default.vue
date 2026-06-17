@@ -3,15 +3,32 @@
     <header class="border-b border-white/10 bg-slate-900/50 backdrop-blur-xl sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <i class="pi pi-bolt text-white text-lg"></i>
-            </div>
-            <div>
+          <div class="flex items-center gap-6">
+            <NuxtLink to="/" class="flex items-center gap-3 group">
+              <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                <i class="pi pi-bolt text-white text-lg"></i>
+              </div>
               <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
                 NLP Data Analytics
               </h1>
-            </div>
+            </NuxtLink>
+            <nav class="flex items-center gap-1">
+              <NuxtLink
+                to="/"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                :class="$route.path === '/' ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'"
+              >
+                <i class="pi pi-home text-xs"></i> Dashboard
+              </NuxtLink>
+              <NuxtLink
+                to="/leads"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                :class="$route.path.startsWith('/leads') ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'"
+              >
+                <i class="pi pi-users text-xs"></i> Leads
+                <span v-if="leadCount > 0" class="ml-1 bg-indigo-600 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 leading-none">{{ leadCount }}</span>
+              </NuxtLink>
+            </nav>
           </div>
           <div class="flex items-center gap-4">
              <a href="https://github.com/QAway-to/mvp-nlp-data-analytics" target="_blank" class="text-slate-400 hover:text-white transition-colors">
@@ -35,7 +52,8 @@
 </template>
 
 <script setup lang="ts">
-// Layout logic if needed
+const { stats } = useLeads()
+const leadCount = computed(() => stats.value.total)
 </script>
 
 <style scoped>
