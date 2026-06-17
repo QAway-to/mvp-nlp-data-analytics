@@ -1,18 +1,33 @@
 import { useLocalStorage } from '@vueuse/core'
-import type { Lead, LeadSource } from '~/types'
+import type { Lead, LeadSource, SourceType } from '~/types'
 
 const MAX_LEADS = 1000
 
-function dedupeKey(l: Pick<Lead, 'sourceChannel' | 'rawMessage'>) {
-  return `${l.sourceChannel}|${l.rawMessage.slice(0, 80)}`
+function dedupeKey(l: Pick<Lead, 'sourceChannel' | 'sourceType' | 'rawMessage'>) {
+  return `${l.sourceType}|${l.sourceChannel}|${l.rawMessage.slice(0, 80)}`
 }
 
 export function useLeads() {
   const leads = useLocalStorage<Lead[]>('leads_db', [])
-  const sources = useLocalStorage<LeadSource[]>('leads_sources', [])
+  const rawSources = useLocalStorage<any[]>('leads_sources', [])
+
+  // Migrate old sources (no id / no type) on first use
+  const sources = computed<LeadSource[]>(() =>
+    rawSources.value
+      .filter((s: any) => s?.channel)
+      .map((s: any) => ({
+        id: s.id ?? (s._migrated_id = crypto.randomUUID(), s._migrated_id),
+        channel: s.channel,
+        type: (s.type ?? 'telegram') as SourceType,
+        lastScrapedAt: s.lastScrapedAt ?? null,
+        leadCount: s.leadCount ?? 0,
+        status: (s.status === 'scraping' ? 'idle' : s.status) as LeadSource['status'],
+        error: s.error,
+      }))
+  )
 
   function addLeads(incoming: Lead[]) {
-    const existing = new Set(leads.value.map(dedupeKey))
+    const existing = new Set(leads.value.map((l: Lead) => dedupeKey(l)))
     const fresh = incoming.filter(l => !existing.has(dedupeKey(l)))
     leads.value = [...leads.value, ...fresh]
     if (leads.value.length > MAX_LEADS) {
@@ -32,40 +47,45 @@ export function useLeads() {
     leads.value = []
   }
 
-  function upsertSource(channel: string) {
-    const normalized = channel.replace('@', '').toLowerCase().trim()
+  function upsertSource(channel: string, type: SourceType = 'telegram') {
+    const normalized = type === 'telegram' ? channel.replace('@', '').toLowerCase().trim() : channel.trim()
     if (!normalized) return
-    if (!sources.value.find(s => s.channel === normalized)) {
-      sources.value = [...sources.value, { channel: normalized, lastScrapedAt: null, leadCount: 0, status: 'idle' }]
-    }
+    const exists = rawSources.value.find((s: any) => s.channel === normalized && (s.type ?? 'telegram') === type)
+    if (exists) return
+    rawSources.value = [...rawSources.value, {
+      id: crypto.randomUUID(),
+      channel: normalized,
+      type,
+      lastScrapedAt: null,
+      leadCount: 0,
+      status: 'idle',
+    }]
   }
 
-  function setSourceStatus(channel: string, status: LeadSource['status'], error?: string) {
-    sources.value = sources.value.map(s =>
-      s.channel === channel ? { ...s, status, error: error ?? s.error } : s
+  function setSourceStatus(id: string, status: LeadSource['status'], error?: string) {
+    rawSources.value = rawSources.value.map((s: any) =>
+      s.id === id ? { ...s, status, ...(error !== undefined ? { error } : { error: undefined }) } : s
     )
   }
 
-  function updateSourceStats(channel: string, count: number) {
-    sources.value = sources.value.map(s =>
-      s.channel === channel
-        ? { ...s, leadCount: s.leadCount + count, lastScrapedAt: new Date().toISOString() }
-        : s
+  function updateSourceStats(id: string, count: number) {
+    rawSources.value = rawSources.value.map((s: any) =>
+      s.id === id ? { ...s, leadCount: (s.leadCount ?? 0) + count, lastScrapedAt: new Date().toISOString() } : s
     )
   }
 
-  function removeSource(channel: string) {
-    sources.value = sources.value.filter(s => s.channel !== channel)
+  function removeSource(id: string) {
+    rawSources.value = rawSources.value.filter((s: any) => s.id !== id)
   }
 
   function exportCSV() {
     const rows = leads.value.map(l => [
       l.name ?? '', l.email ?? '', l.phone ?? '', l.username ?? '',
-      l.company ?? '', l.intent, l.score, l.status,
+      l.company ?? '', l.intent, l.score, l.status, l.sourceType,
       l.sourceChannel, new Date(l.createdAt).toLocaleDateString(),
       l.messageUrl ?? '', l.rawMessage.replace(/\n/g, ' ').slice(0, 300)
     ])
-    const header = ['Name', 'Email', 'Phone', 'Telegram', 'Company', 'Intent', 'Score', 'Status', 'Source', 'Date', 'URL', 'Message']
+    const header = ['Name', 'Email', 'Phone', 'Telegram', 'Company', 'Intent', 'Score', 'Status', 'SourceType', 'Source', 'Date', 'URL', 'Message']
     const csv = [header, ...rows]
       .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
       .join('\n')
