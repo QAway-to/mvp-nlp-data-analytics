@@ -67,32 +67,30 @@ export interface QueryHistoryItem {
 
 // CRM Models
 export interface Deal {
-    id: string; // UUID
+    id: string;
     title: string;
     company: string;
     value: number;
     currency: string;
     status: 'new' | 'contacted' | 'proposal' | 'won' | 'lost';
     type: 'B2B' | 'B2C';
-    manager_id: string; // UUID
+    manager_id: string;
     created_at: Date;
     nlp_analysis?: {
         risk_score: number;
         summary_sentiment: 'positive' | 'neutral' | 'negative';
         [key: string]: any;
     };
-    // CRM Fields
     contact_name?: string;
     contact_email?: string;
     contact_phone?: string;
     cemetery_name?: string;
     permit_date?: Date;
-    payment_type?: '3_parts' | '2_parts' | 'full'; // 3_parts=35/35/30, 2_parts=50/50
+    payment_type?: '3_parts' | '2_parts' | 'full';
     last_activity_date?: Date;
     next_activity_date?: Date;
     next_activity_type?: 'call' | 'email' | 'meeting' | 'task';
-    probability?: number; // 0-100
-    // UI Helpers (Optional)
+    probability?: number;
     avatar?: string;
     ownerInitials?: string;
 }
@@ -101,13 +99,12 @@ export interface PipelineColumn {
     id: string;
     label: string;
     deals_count: number;
-    color: string; // HEX color for stage
-    // UI Helper
+    color: string;
     deals: Deal[];
 }
 
 export interface AnalyticsReport {
-    period: string; // e.g. "Q1 2024"
+    period: string;
     total_pipeline_value: number;
     weighted_forecast: number;
     conversion_rate: number;
@@ -115,9 +112,12 @@ export interface AnalyticsReport {
 
 // ─── Lead Generation ──────────────────────────────────────────────────────────
 
+export type SourceType = 'telegram' | 'hh' | 'fl' | 'habr'
+
 export interface Lead {
   id: string
   sourceChannel: string
+  sourceType: SourceType
   name: string | null
   email: string | null
   phone: string | null
@@ -132,7 +132,9 @@ export interface Lead {
 }
 
 export interface LeadSource {
+  id: string
   channel: string
+  type: SourceType
   lastScrapedAt: string | null
   leadCount: number
   status: 'idle' | 'scraping' | 'error'
