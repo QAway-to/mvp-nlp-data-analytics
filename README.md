@@ -1,57 +1,62 @@
-# mvp-nlp-data-analytics
+# NLP Lead Generator
 
-> CRM and analytics platform — Kanban sales pipeline, NLP-powered dataset querying, and AI-generated chart insights.
+A single-page lead generation tool built with Nuxt 3. It scrapes public sources, extracts contacts, and scores leads by intent using NLP heuristics — then lets you filter, triage, and export them.
 
-Three integrated modules built with Nuxt 3: a B2B/B2C deal pipeline modelled after Bitrix24, a natural-language interface for querying uploaded CSV/XLSX files, and a central dashboard with real-time KPIs.
+## What it does
 
-## Features
+Add a **source**, click scrape, and the app pulls fresh leads into a single searchable database.
 
-**Smart Deals CRM (`/deals`)**
-- **Kanban board** — drag-and-drop stages with probability-weighted pipeline value
-- **Rich deal cards** — AI risk score, sentiment label, next planned activity, contact info
-- **Detail panel** — slide-out view with full activity stream and AI insights
-- **B2B / B2C tagging** — visual differentiation and separate metrics per type
+### Supported sources
 
-**NLP Data Analytics (`/datasets`)**
-- **Universal import** — CSV and XLSX file upload with column auto-detection
-- **Natural language queries** — ask questions like "Show Q1 sales trend" and get a chart
-- **Persistent reports** — saved datasets and generated charts via local storage
-- **Auto-visualizations** — bar, line, and pie charts generated from query results
+| Source | Input | What it finds |
+|--------|-------|---------------|
+| **Telegram** | `@channel_name` | Posts in public channels |
+| **hh.ru** | search query (e.g. `веб разработка`) | Companies hiring developers |
+| **FL.ru** | search query (e.g. `создание сайта`) | Freelance project postings |
+| **Habr Career** | search query (e.g. `стартап разработка`) | Tech companies |
 
-**Dashboard (`/`)**
-- Real-time KPIs, pipeline value, conversion rate
-- Quick links to recent reports and active deals
+### Features
 
-## Tech Stack
+- **Intent scoring** — each lead gets a 0–100 score and an intent label (high / medium / low / none) derived from message content.
+- **Contact extraction** — name, company, email, phone, and Telegram handle pulled from raw text.
+- **Unified table** — search, filter by source / intent / status, and paginate across all collected leads.
+- **Pipeline status** — mark each lead New → Contacted → Qualified → Rejected.
+- **Message preview** — inspect the original source message and open the link.
+- **CSV export** — download the full database for use elsewhere.
+- **Local persistence** — leads and sources are stored in the browser (`localStorage`), no backend DB required.
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Nuxt 3 (Vue 3) |
-| Language | TypeScript |
-| Styling | Tailwind CSS |
-| Charts | Custom composables |
-| Data | CSV / XLSX parsing, localStorage |
+## Architecture
 
-## Getting Started
+```
+/
+├── pages/index.vue          # The single page — sources sidebar + leads table
+├── composables/useLeads.ts  # Lead/source state, dedupe, scoring, persistence, CSV
+├── layouts/default.vue      # App shell (header + footer)
+├── server/api/
+│   ├── scrape.post.ts       # Telegram scraper
+│   ├── scrape-hh.post.ts    # hh.ru scraper
+│   ├── scrape-fl.post.ts    # FL.ru scraper
+│   └── scrape-habr.post.ts  # Habr Career scraper
+└── types/index.ts           # Lead / LeadSource / SourceType models
+```
+
+Each scrape endpoint is self-contained: it fetches from the source, parses results, extracts contacts, and returns scored `Lead[]`. The UI is a pure function of the state held in `useLeads`.
+
+## Setup
 
 ```bash
 npm install
+```
+
+## Development
+
+```bash
 npm run dev   # http://localhost:3000
 ```
 
-## Project Structure
+## Production
 
+```bash
+npm run build
+node .output/server/index.mjs
 ```
-├── pages/
-│   ├── index.vue        # Dashboard
-│   ├── deals.vue        # Kanban CRM
-│   └── datasets.vue     # NLP analytics
-├── components/          # UI widgets (cards, charts, panels)
-├── composables/         # useDeals, useDataset, useNLP
-├── server/              # API routes
-└── types/               # Shared TypeScript interfaces
-```
-
-## License
-
-MIT
