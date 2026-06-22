@@ -23,6 +23,7 @@
     "jspdf": "^4.0.0",
     "nuxt": "^4.3.0",
     "papaparse": "^5.5.3",
+    "pg": "^8.22.0",
     "primeicons": "^7.0.0",
     "primevue": "^4.5.4",
     "sass": "^1.97.3",
@@ -31,6 +32,9 @@
     "vue-chartjs": "^5.3.3",
     "vue-router": "^4.6.4",
     "xlsx": "^0.18.5",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.20.0"
   }
 }

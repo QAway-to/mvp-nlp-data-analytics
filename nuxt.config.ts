@@ -29,6 +29,11 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     openrouterApiKey: process.env.OPENROUTER_API_KEY,
+    databaseUrl: process.env.DATABASE_URL,
+    deepSeekKey: process.env.DEEP_SEEK,
+    llmBaseUrl: process.env.LLM_BASE_URL,
+    llmModel: process.env.LLM_MODEL,
+    cronSecret: process.env.CRON_SECRET,
     public: {}
   },
   compatibilityDate: '2025-01-29',
