@@ -137,6 +137,10 @@
           <option value="hh">hh.ru</option>
           <option value="fl">FL.ru</option>
           <option value="habr">Habr</option>
+          <option value="hn">Hacker News</option>
+          <option value="remoteok">RemoteOK</option>
+          <option value="remotive">Remotive</option>
+          <option value="wwr">We Work Remotely</option>
         </select>
 
         <select
@@ -383,10 +387,14 @@ useHead({ title: 'NLP Lead Generator' })
 const { leads, sources, stats, addLeads, updateStatus, removeLead, clearAll, upsertSource, setSourceStatus, updateSourceStats, removeSource, exportCSV } = useLeads()
 
 const SOURCE_CONFIG: Record<SourceType, { label: string; icon: string; placeholder: string; color: string; hint: string }> = {
-  telegram: { label: 'TG',    icon: 'pi-send',      placeholder: '@channel_name',      color: 'text-blue-400',   hint: 'Public channels' },
-  hh:       { label: 'hh',    icon: 'pi-briefcase', placeholder: 'веб разработка',      color: 'text-red-400',    hint: 'Companies hiring devs' },
-  fl:       { label: 'FL',    icon: 'pi-tag',       placeholder: 'создание сайта',      color: 'text-green-400',  hint: 'Freelance projects' },
-  habr:     { label: 'Habr',  icon: 'pi-book',      placeholder: 'стартап разработка',  color: 'text-orange-400', hint: 'Tech companies' },
+  telegram: { label: 'TG',   icon: 'pi-send',      placeholder: '@channel_name',                 color: 'text-blue-400',   hint: 'Public channels' },
+  hh:       { label: 'hh',   icon: 'pi-briefcase', placeholder: 'веб разработка',                 color: 'text-red-400',    hint: 'Companies hiring devs' },
+  fl:       { label: 'FL',   icon: 'pi-tag',       placeholder: 'создание сайта',                color: 'text-green-400',  hint: 'Freelance projects' },
+  habr:     { label: 'Habr', icon: 'pi-book',      placeholder: 'стартап разработка',            color: 'text-sky-400',    hint: 'Tech companies' },
+  hn:       { label: 'HN',   icon: 'pi-comments',  placeholder: 'Freelancer Seeking freelancer', color: 'text-orange-400', hint: 'Ask HN clients seeking freelancers' },
+  remoteok: { label: 'ROK',  icon: 'pi-globe',     placeholder: 'react developer',               color: 'text-pink-400',   hint: 'RemoteOK job board' },
+  remotive: { label: 'Rmtv', icon: 'pi-desktop',   placeholder: 'software dev',                   color: 'text-teal-400',   hint: 'Remotive remote jobs' },
+  wwr:      { label: 'WWR',  icon: 'pi-server',    placeholder: 'frontend',                       color: 'text-purple-400', hint: 'We Work Remotely board' },
 }
 
 const SCRAPE_ENDPOINTS: Record<SourceType, string> = {
@@ -394,6 +402,10 @@ const SCRAPE_ENDPOINTS: Record<SourceType, string> = {
   hh: '/api/scrape-hh',
   fl: '/api/scrape-fl',
   habr: '/api/scrape-habr',
+  hn: '/api/scrape-hn',
+  remoteok: '/api/scrape-remoteok',
+  remotive: '/api/scrape-remotive',
+  wwr: '/api/scrape-wwr',
 }
 
 const newQuery = ref('')

@@ -112,7 +112,7 @@ export interface AnalyticsReport {
 
 // ─── Lead Generation ──────────────────────────────────────────────────────────
 
-export type SourceType = 'telegram' | 'hh' | 'fl' | 'habr'
+export type SourceType = 'telegram' | 'hh' | 'fl' | 'habr' | 'hn' | 'remoteok' | 'remotive' | 'wwr'
 
 export interface Lead {
   id: string
