@@ -45,6 +45,25 @@ export async function listDueSources(limit: number): Promise<SourceConfig[]> {
   return result.rows.map(rowToSourceConfig)
 }
 
+export interface SourceHealth extends SourceConfig {
+  lastRunAt: string | null
+  healthScore: number
+}
+
+export async function listAllSources(): Promise<SourceHealth[]> {
+  const result = await query<SourceRow>(
+    `SELECT id, mode, adapter, url, field_mapping, keyword, vertical, ttl_days, enabled,
+            last_run_at, health_score, created_at
+     FROM sources
+     ORDER BY enabled DESC, health_score DESC, url ASC`,
+  )
+  return result.rows.map((row) => ({
+    ...rowToSourceConfig(row),
+    lastRunAt: row.last_run_at,
+    healthScore: row.health_score,
+  }))
+}
+
 export async function getSource(id: number): Promise<SourceConfig> {
   const result = await query<SourceRow>(
     `SELECT id, mode, adapter, url, field_mapping, keyword, vertical, ttl_days, enabled,
