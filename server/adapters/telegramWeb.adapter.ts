@@ -1,5 +1,7 @@
+import { createError } from 'h3'
 import type { SourceAdapter, AdapterContext } from './types'
 import type { RawListing, SourceConfig } from '~/types/pipeline'
+import { stripHtml } from '~/server/utils/leads'
 
 // Public broadcast channels via the t.me/s/ web mirror. No account needed.
 // Per-message author handles are NOT available here (that needs MTProto/GramJS);

@@ -1,4 +1,6 @@
+import { createError } from 'h3'
 import type { AdapterContext } from './types'
+import { BROWSER_UA } from '~/server/utils/leads'
 
 const FETCH_TIMEOUT_MS = 12_000
 
