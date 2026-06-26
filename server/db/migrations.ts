@@ -96,4 +96,63 @@ CREATE INDEX IF NOT EXISTS idx_leads_view    ON leads (vertical, type, status, s
 CREATE INDEX IF NOT EXISTS idx_leads_contact ON leads (contact_id);
 `,
   },
+  {
+    version: '0002_outreach',
+    sql: `
+-- ───────────── outreach_targets (placement communities) ─────────────
+CREATE TABLE IF NOT EXISTS outreach_targets (
+  id              SERIAL PRIMARY KEY,
+  handle          TEXT NOT NULL UNIQUE,
+  title           TEXT,
+  city            TEXT,
+  category        TEXT,
+  members         INTEGER,
+  online          INTEGER,
+  kind            TEXT,
+  activity        TEXT,
+  ad_policy       TEXT,
+  recommendation  TEXT,
+  reasons         TEXT,
+  last_checked_at TIMESTAMPTZ,
+  enabled         BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ───────────── outreach_placements (one per target — no repeat posting) ─────────────
+CREATE TABLE IF NOT EXISTS outreach_placements (
+  id             BIGSERIAL PRIMARY KEY,
+  target_id      INTEGER NOT NULL REFERENCES outreach_targets(id) ON DELETE CASCADE,
+  variant        INTEGER,
+  message_text   TEXT,
+  scheduled_at   TIMESTAMPTZ,
+  sent_at        TIMESTAMPTZ,
+  message_url    TEXT,
+  screenshot_url TEXT,
+  state          TEXT NOT NULL DEFAULT 'pending'
+                 CHECK (state IN ('pending','scheduled','sent','verified','deleted','skipped','failed')),
+  verified_at    TIMESTAMPTZ,
+  note           TEXT,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (target_id)
+);
+CREATE INDEX IF NOT EXISTS idx_placements_due ON outreach_placements (state, scheduled_at);
+
+-- ───────────── outreach_schedule (singleton pace config) ─────────────
+CREATE TABLE IF NOT EXISTS outreach_schedule (
+  id                INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  per_day           INTEGER NOT NULL DEFAULT 20,
+  active_start_hour INTEGER NOT NULL DEFAULT 10,
+  active_end_hour   INTEGER NOT NULL DEFAULT 22,
+  min_gap_min       INTEGER NOT NULL DEFAULT 12,
+  jitter_min        INTEGER NOT NULL DEFAULT 7,
+  tz_offset_hours   INTEGER NOT NULL DEFAULT 3,
+  enabled           BOOLEAN NOT NULL DEFAULT FALSE,
+  started_at        TIMESTAMPTZ,
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CHECK (active_end_hour > active_start_hour)
+);
+INSERT INTO outreach_schedule (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+`,
+  },
 ]

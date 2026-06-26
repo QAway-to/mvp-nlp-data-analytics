@@ -15,6 +15,8 @@
             <span v-if="leadCount > 0" class="ml-1 bg-indigo-600 text-white text-[10px] font-bold rounded-full px-2 py-0.5 leading-none">{{ leadCount }} leads</span>
           </div>
           <div class="flex items-center gap-4">
+            <NuxtLink to="/" class="text-sm font-medium text-slate-300 hover:text-white transition-colors">Leads</NuxtLink>
+            <NuxtLink to="/outreach" class="text-sm font-medium text-slate-300 hover:text-white transition-colors">Посев</NuxtLink>
             <a href="https://github.com/QAway-to/mvp-nlp-data-analytics" target="_blank" class="text-slate-400 hover:text-white transition-colors">
               <i class="pi pi-github text-xl"></i>
             </a>
