@@ -20,8 +20,9 @@ const SYSTEM = [
   'Ты пишешь ОДНО короткое сообщение для телеграм-чата водителей/такси — спокойно и по делу,',
   'как взрослый человек, который нашёл полезную карту наличия топлива на АЗС и делится ей.',
   'Тон: ровный, естественный, для взрослой аудитории. БЕЗ молодёжного сленга и слов-паразитов',
-  '(никаких «народ», «кста», «чекай», «движ», «штука», «кидайте», «го»), без эмодзи,',
-  'без рекламного пафоса и без канцелярита. Простой ясный язык, можно со строчной буквы.',
+  '(никаких «народ», «пацаны», «мужики», «ребят», «парни», «кста», «чекай», «движ», «штука», «кидайте», «го»).',
+  'НЕ обращайся к участникам чата напрямую и без вокативов — это нейтральное сообщение, не призыв.',
+  'Без эмодзи, без рекламного пафоса и без канцелярита. Простой ясный язык, можно со строчной буквы.',
   '1–2 коротких предложения. Суть: это карта наличия бензина/топлива на заправках,',
   'её пополняют сами водители — чем больше отметок, тем точнее; можно отметить свою заправку.',
   `В конце — ссылка ${URL} с НОВОЙ строки.`,
@@ -45,6 +46,10 @@ function fallback(): string {
   return MESSAGE_VARIANTS[Math.floor(Math.random() * MESSAGE_VARIANTS.length)]
 }
 
+// Server-side guard: reject slang / direct group-address the prompt is supposed
+// to avoid, so a model slip never reaches the clipboard.
+const BANNED = /народ|пацан|мужик|ребят|\bпарни\b|\bкста\b|чека[йю]|\bдвиж|\bштук[ауи]|кидай|погнал|зацен|\bйоу\b|\bго\b/i
+
 function clean(raw: string): string {
   let t = raw.trim().replace(/^["'«»]+|["'«»]+$/g, '').trim()
   if (!t) return fallback()
@@ -55,13 +60,18 @@ function clean(raw: string): string {
 export default defineEventHandler(async () => {
   try {
     const provider = getLlmProvider()
-    const angle = ANGLES[Math.floor(Math.random() * ANGLES.length)]
-    const text = await provider.complete([
-      { role: 'system', content: SYSTEM },
-      { role: 'user', content: `Сгенерируй свежую вариацию. ${angle}.` },
-    ])
-    const out = clean(text)
-    return { success: true, text: out, source: provider.name }
+    // Up to 2 tries: regenerate if the model slips into banned slang, then give up.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const angle = ANGLES[Math.floor(Math.random() * ANGLES.length)]
+      const raw = await provider.complete([
+        { role: 'system', content: SYSTEM },
+        { role: 'user', content: `Сгенерируй свежую вариацию. ${angle}.` },
+      ])
+      const out = clean(raw)
+      if (!BANNED.test(out)) return { success: true, text: out, source: provider.name }
+    }
+    // Both attempts came back slangy → known-clean reference variant.
+    return { success: true, text: fallback(), source: 'fallback-clean' }
   } catch (err) {
     // LLM unavailable → static variant, never block the operator.
     console.error('[gen-text] llm failed, using fallback:', err instanceof Error ? err.message : err)
