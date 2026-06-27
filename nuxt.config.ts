@@ -34,6 +34,14 @@ export default defineNuxtConfig({
     llmBaseUrl: process.env.LLM_BASE_URL,
     llmModel: process.env.LLM_MODEL,
     cronSecret: process.env.CRON_SECRET,
+    // Outreach (sheet-as-database): service-account key (base64) + target sheet + pace.
+    googleSaJson: process.env.GOOGLE_SA_JSON,
+    outreachSheetId: process.env.OUTREACH_SHEET_ID,
+    outreachPerDay: process.env.OUTREACH_PER_DAY,
+    outreachStartHour: process.env.OUTREACH_START_HOUR,
+    outreachEndHour: process.env.OUTREACH_END_HOUR,
+    outreachMinGap: process.env.OUTREACH_MIN_GAP,
+    outreachJitter: process.env.OUTREACH_JITTER,
     public: {}
   },
   compatibilityDate: '2025-01-29',

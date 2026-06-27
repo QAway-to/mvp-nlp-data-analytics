@@ -1,6 +1,6 @@
-import { getSchedule } from '~/server/db/repositories/outreach.repo'
+import { getScheduleConfig } from '~/server/outreach/config'
 
-export default defineEventHandler(async () => {
-  const settings = await getSchedule()
-  return { success: true, data: settings, error: null }
+// Current pace defaults (from env) — used to seed the UI schedule form.
+export default defineEventHandler(() => {
+  return { success: true, data: getScheduleConfig(), error: null }
 })

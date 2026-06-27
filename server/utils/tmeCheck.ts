@@ -113,9 +113,13 @@ export function assessActivity(mirrorHtml: string, online: number | null): Activ
     .sort((a, b) => b - a)
 
   if (times.length === 0) {
-    // Mirror empty/disabled (typical for supergroups): judge by live online count.
+    // Mirror empty/disabled (typical for supergroups — Telegram hides their
+    // history). The live "online" count is a WEAK proxy: a busy group can show
+    // 3-4 online in a quiet second. So a high online still implies activity, but
+    // a low one is inconclusive → 'unknown' (manual check), never 'dead'. Only
+    // the mirror path below (channels, with real timestamps) may return 'dead'.
     if (online === null) return { level: 'unknown', recent24h: 0, lastPostAt: null, sample: 0 }
-    const level: ActivityLevel = online >= 200 ? 'high' : online >= 50 ? 'medium' : online >= 5 ? 'low' : 'dead'
+    const level: ActivityLevel = online >= 200 ? 'high' : online >= 50 ? 'medium' : 'unknown'
     return { level, recent24h: 0, lastPostAt: null, sample: 0 }
   }
 

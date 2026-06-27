@@ -1,11 +1,12 @@
-import { getSchedule, getDuePlacements } from '~/server/db/repositories/outreach.repo'
+import { readQueue } from '~/server/utils/sheets'
 
-// Placements whose slot has arrived — what the operator should send right now.
-// Returns empty while the campaign is paused (enabled = false).
+// Rows whose scheduled slot has arrived — what the operator should send now.
 export default defineEventHandler(async () => {
-  const schedule = await getSchedule()
-  if (!schedule.enabled) return { success: true, data: [], paused: true, error: null }
-
-  const due = await getDuePlacements(new Date().toISOString(), 10)
-  return { success: true, data: due, paused: false, error: null }
+  const rows = await readQueue()
+  const now = Date.now()
+  const due = rows
+    .filter((r) => r.status.toLowerCase() === 'запланировано' && r.slot && Date.parse(r.slot) <= now)
+    .sort((a, b) => Date.parse(a.slot) - Date.parse(b.slot))
+    .slice(0, 10)
+  return { success: true, data: due, error: null }
 })
