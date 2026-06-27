@@ -28,8 +28,8 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 interface Found { handle: string; title: string; members: number }
 
 export default defineEventHandler(async (event) => {
-  if (process.env.CRON_SECRET) requireSecret(event)
-
+  // Unauthenticated, matching the rest of the outreach API (internal app). The
+  // work is read-only Telegram search, bounded per call.
   const apiId = Number(process.env.API_ID_TELEGRAM || process.env.API_ID)
   const apiHash = process.env.API_HASH
   const session = process.env.TG_SESSION

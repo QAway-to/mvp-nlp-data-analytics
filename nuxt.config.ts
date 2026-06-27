@@ -28,6 +28,7 @@ export default defineNuxtConfig({
     }
   },
   runtimeConfig: {
+    appPassword: process.env.APP_PASSWORD,
     openrouterApiKey: process.env.OPENROUTER_API_KEY,
     databaseUrl: process.env.DATABASE_URL,
     deepSeekKey: process.env.DEEP_SEEK,
