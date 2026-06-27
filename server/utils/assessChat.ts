@@ -1,7 +1,7 @@
 import { stripHtml } from './leads'
 import {
   fetchTme, parseHandle, isValidHandle, parseCounts, parseDescription,
-  assessActivity, scanAdPolicy,
+  assessActivity, scanAdPolicy, scanEntryBarrier,
   type ActivityLevel, type AdPolicy,
 } from './tmeCheck'
 
@@ -27,6 +27,8 @@ export interface ChatAssessment {
   lastPostAt: string | null
   adPolicy: AdPolicy
   adEvidence: string | null
+  entryBarrier: boolean
+  entryEvidence: string | null
   isGroup: boolean
   recommendation: Recommendation
   reasons: string[]
@@ -45,6 +47,9 @@ type AssessmentCore = Omit<ChatAssessment, 'recommendation' | 'reasons'>
 
 export function decide(a: AssessmentCore): { recommendation: Recommendation; reasons: string[] } {
   if (!a.alive) return { recommendation: 'skip', reasons: ['чат не найден или закрыт публично'] }
+  // Auto-send target: a verification/captcha/join-request gate cannot be passed
+  // automatically → skip outright, no slot wasted.
+  if (a.entryBarrier) return { recommendation: 'skip', reasons: [`барьер входа (верификация/заявка) — автоотправка не пройдёт: «${a.entryEvidence}»`] }
   if (a.activity === 'dead') return { recommendation: 'skip', reasons: ['мёртвый: нет свежих сообщений'] }
   if (a.activity === 'unknown' && a.members !== null && a.members < 30) {
     return { recommendation: 'skip', reasons: [`похоже мёртвый: всего ${a.members} участников`] }
@@ -81,7 +86,8 @@ export async function assessChat(handleInput: string): Promise<ChatAssessment | 
     const core: AssessmentCore = {
       handle, url, alive: false, kind: 'unknown', title, members: null, online: null,
       activity: 'unknown', recent24h: 0, lastPostAt: null,
-      adPolicy: 'unknown', adEvidence: null, isGroup: false, checkedAt,
+      adPolicy: 'unknown', adEvidence: null, entryBarrier: false, entryEvidence: null,
+      isGroup: false, checkedAt,
     }
     return { ...core, ...decide(core) }
   }
@@ -93,12 +99,16 @@ export async function assessChat(handleInput: string): Promise<ChatAssessment | 
   // Only public groups/channels mirror messages; a miss just yields 'unknown' activity.
   const mirror = await fetchTme(`https://t.me/s/${handle}`)
   const activity = assessActivity(mirror.html, online)
-  const adScan = scanAdPolicy(`${description}\n${stripHtml(mirror.html).slice(0, 4_000)}`)
+  const haystack = `${description}\n${stripHtml(mirror.html).slice(0, 4_000)}`
+  const adScan = scanAdPolicy(haystack)
+  const entry = scanEntryBarrier(haystack)
 
   const core: AssessmentCore = {
     handle, url, alive: true, kind, title, members, online,
     activity: activity.level, recent24h: activity.recent24h, lastPostAt: activity.lastPostAt,
-    adPolicy: adScan.policy, adEvidence: adScan.evidence, isGroup: kind === 'group', checkedAt,
+    adPolicy: adScan.policy, adEvidence: adScan.evidence,
+    entryBarrier: entry.barrier, entryEvidence: entry.evidence,
+    isGroup: kind === 'group', checkedAt,
   }
   return { ...core, ...decide(core) }
 }

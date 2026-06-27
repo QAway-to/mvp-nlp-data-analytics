@@ -162,3 +162,34 @@ export function scanAdPolicy(text: string): AdPolicyCheck {
   }
   return { policy: 'unknown', evidence: null }
 }
+
+// ───────────── entry barrier (verification / captcha / join-request) ─────────────
+
+export interface EntryBarrierCheck {
+  barrier: boolean
+  evidence: string | null
+}
+
+// Gates a human passes once but an automated sender cannot: join-request approval,
+// captcha / anti-bot bots, "prove you're not a robot", verification via a bot.
+// Bounded quantifiers → ReDoS-safe. First hit wins. Tuned to need a barrier-specific
+// context (never matches a bare "бот", which is common in taxi-order descriptions).
+const ENTRY_BARRIER_RULES: ReadonlyArray<RegExp> = [
+  // join by request / admin approval — requires BOTH a "join" stem and "заявк"/
+  // "одобр" nearby (\w can't bridge Cyrillic in JS, so use [^.] gaps). Never fires
+  // on a bare "по заявкам", which legit taxi/delivery groups use for their service.
+  /вступ[^.]{0,20}заявк|заявк[^.]{0,20}вступ|вход[^.]{0,12}заявк|вступ[^.]{0,15}одобр/i,
+  // captcha / anti-bot / prove-you're-not-a-robot
+  /капч|captcha|антибот|anti[\s-]{0,2}bot|анти[\s-]{0,2}спам[\s-]{0,2}бот|вы\s{0,3}не\s{0,3}робот|(докаж|подтверд)\w{0,5}[^.]{0,15}не\s{0,3}(ро)?бот/i,
+  // verification, or a bot you must message to be let in
+  /верифи\w{0,6}|(для\s{0,3}вступлени\w{0,3}|чтобы\s{0,3}вступ\w{0,3})[^.]{0,15}бот|напиш\w{0,3}[^.]{0,12}бот\w{0,3}[^.]{0,15}вступ/i,
+]
+
+export function scanEntryBarrier(text: string): EntryBarrierCheck {
+  const haystack = text.toLowerCase()
+  for (const re of ENTRY_BARRIER_RULES) {
+    const m = haystack.match(re)
+    if (m) return { barrier: true, evidence: m[0].trim().slice(0, 120) }
+  }
+  return { barrier: false, evidence: null }
+}
