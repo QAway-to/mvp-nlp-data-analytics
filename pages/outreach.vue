@@ -37,6 +37,7 @@
             </div>
             <p class="text-[11px] text-slate-400 mt-1 line-clamp-3">{{ variantText(d.variant) }}</p>
             <div class="flex gap-1.5 mt-2">
+              <button @click="copyText" :disabled="copying" class="btn-mini btn-secondary"><i class="pi pi-copy" /> {{ copying ? '…' : 'Текст' }}</button>
               <button @click="markSent(d)" class="btn-mini btn-success">Отправлено</button>
               <button @click="skip(d)" class="btn-mini btn-secondary">Пропустить</button>
             </div>
@@ -75,6 +76,7 @@
             <td class="px-2">
               <div class="flex gap-1 justify-end">
                 <a :href="r.chatUrlFull" target="_blank" class="btn-mini btn-secondary" title="Открыть в TG"><i class="pi pi-external-link" /></a>
+                <button v-if="canSend(r)" @click="copyText" :disabled="copying" class="btn-mini btn-secondary" title="Сгенерировать и скопировать свежий текст"><i class="pi pi-copy" /></button>
                 <button v-if="canSend(r)" @click="markSent(r)" class="btn-mini btn-success" title="Отметить отправку"><i class="pi pi-check" /></button>
                 <button v-if="canSend(r)" @click="skip(r)" class="btn-mini btn-secondary" title="Пропустить"><i class="pi pi-ban" /></button>
               </div>
@@ -110,6 +112,7 @@ function variantText(v: string): string {
 const queue = ref<Row[]>([])
 const due = ref<Row[]>([])
 const busy = ref(false)
+const copying = ref(false)
 const toast = ref('')
 const checkLabel = ref('Проверить')
 const cfg = ref<Cfg>({ perDay: 20, activeStartHour: 10, activeEndHour: 22, minGapMin: 12, jitterMin: 7, tzOffsetHours: 3 })
@@ -184,6 +187,27 @@ const skip = (r: Row) => run(async () => {
   await $fetch('/api/outreach/mark', { method: 'POST', body: { row: r.row, status: 'пропущено' } })
   await refreshAll()
 })
+
+// Generate a fresh LLM variation and drop it straight into the clipboard — the
+// operator pastes into Telegram without ever needing to read/retype it.
+async function copyText() {
+  if (copying.value) return
+  copying.value = true
+  try {
+    const { text } = await $fetch<{ text: string }>('/api/outreach/gen-text', { method: 'POST' })
+    try {
+      await navigator.clipboard.writeText(text)
+      flash('Текст скопирован ✓ — вставляй в чат')
+    } catch {
+      // Clipboard blocked (focus/permissions) → surface so it can be copied by hand.
+      window.prompt('Скопируй текст вручную (Ctrl+C):', text)
+    }
+  } catch {
+    flash('Не удалось сгенерировать текст')
+  } finally {
+    copying.value = false
+  }
+}
 
 const DONE = ['размещено', 'проверено', 'удалено', 'skip', 'пропущено']
 function canSend(r: Row): boolean {

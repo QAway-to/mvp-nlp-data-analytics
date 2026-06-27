@@ -15,13 +15,13 @@ export interface LlmProvider {
 export function getLlmProvider(): LlmProvider {
   const cfg = useRuntimeConfig()
 
-  const deepSeekKey = process.env.DEEP_SEEK || cfg.deepSeekKey
+  const deepSeekKey = process.env.DEEP_SEEK_API_KEY || process.env.DEEP_SEEK || cfg.deepSeekKey
   if (deepSeekKey) {
     return makeOpenAiCompatibleProvider({
       name: 'deepseek',
       baseUrl: process.env.LLM_BASE_URL || cfg.llmBaseUrl || 'https://api.deepseek.com',
       apiKey: deepSeekKey,
-      model: process.env.LLM_MODEL || cfg.llmModel || 'deepseek-chat',
+      model: process.env.DEEPSEEK_MODEL || process.env.LLM_MODEL || cfg.llmModel || 'deepseek-chat',
     })
   }
 

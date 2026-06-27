@@ -149,7 +149,8 @@ export interface AdPolicyCheck {
 
 // Ordered most-restrictive first; first hit wins. Bounded quantifiers → ReDoS-safe.
 const POLICY_RULES: ReadonlyArray<{ policy: Exclude<AdPolicy, 'open' | 'unknown'>; re: RegExp }> = [
-  { policy: 'forbidden', re: /(реклам\w{0,3}\s{0,3}запрещ|запрещ\w{0,5}\s{0,3}реклам|без\s{0,3}реклам|за\s{0,3}реклам\w{0,3}[^.]{0,20}бан|спам[^.]{0,15}бан|no\s{0,3}ads|ads\s{0,3}(are\s{0,3})?forbidden)/i },
+  // External links banned (our whole post is a link → useless) is as fatal as an ad ban.
+  { policy: 'forbidden', re: /(реклам\w{0,3}\s{0,3}запрещ|запрещ\w{0,5}\s{0,3}реклам|без\s{0,3}реклам|за\s{0,3}реклам\w{0,3}[^.]{0,20}бан|спам[^.]{0,15}бан|no\s{0,3}ads|ads\s{0,3}(are\s{0,3})?forbidden|внешн[^.]{0,8}ссылк[^.]{0,20}(запрещ|блокир|удал|нельзя)|ссылк[^.]{0,18}(запрещ|блокир|удаля)|нельзя[^.]{0,8}ссылк)/i },
   { policy: 'paid', re: /(реклам\w{0,3}[^.]{0,20}(платн|оплат|прайс|\d{2,}\s{0,3}(₽|руб))|платн\w{0,5}\s{0,3}реклам|реклама[^.]{0,10}\d{2,})/i },
   { policy: 'approval', re: /(по\s{0,3}согласован|согласова\w{0,4}[^.]{0,15}админ|реклам\w{0,3}[^.]{0,15}(через|у|пишите)[^.]{0,10}админ|реклам\w{0,3}\s{0,3}@)/i },
 ]
@@ -181,8 +182,10 @@ const ENTRY_BARRIER_RULES: ReadonlyArray<RegExp> = [
   /вступ[^.]{0,20}заявк|заявк[^.]{0,20}вступ|вход[^.]{0,12}заявк|вступ[^.]{0,15}одобр/i,
   // captcha / anti-bot / prove-you're-not-a-robot
   /капч|captcha|антибот|anti[\s-]{0,2}bot|анти[\s-]{0,2}спам[\s-]{0,2}бот|вы\s{0,3}не\s{0,3}робот|(докаж|подтверд)\w{0,5}[^.]{0,15}не\s{0,3}(ро)?бот/i,
-  // verification, or a bot you must message to be let in
-  /верифи\w{0,6}|(для\s{0,3}вступлени\w{0,3}|чтобы\s{0,3}вступ\w{0,3})[^.]{0,15}бот|напиш\w{0,3}[^.]{0,12}бот\w{0,3}[^.]{0,15}вступ/i,
+  // verification (RU + Latin "verif…"), or a bot you must message to be let in
+  /верифи\w{0,6}|verif\w{0,4}|(для\s{0,3}вступлени\w{0,3}|чтобы\s{0,3}вступ\w{0,3})[^.]{0,15}бот|напиш\w{0,3}[^.]{0,12}бот\w{0,3}[^.]{0,15}вступ/i,
+  // managed ad networks (UMA & co.) — free posting is auto-blocked there
+  /uma_admin|umatg\.ru|umamall\.ru|verifuma|каталог\s{0,3}uma|биржа\s{0,3}uma/i,
 ]
 
 export function scanEntryBarrier(text: string): EntryBarrierCheck {
