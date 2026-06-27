@@ -75,13 +75,18 @@ function cell(value: unknown): string {
 
 // Read the whole queue (header row skipped). Unqualified range → first sheet.
 export async function readQueue(): Promise<SheetRow[]> {
+  // Resolve config/auth OUTSIDE the try so a missing env var surfaces as its own
+  // 500 ("not configured") instead of being masked as a generic 502.
+  const id = sheetId()
+  const client = api()
   let res
   try {
-    res = await api().spreadsheets.values.get({ spreadsheetId: sheetId(), range: `A2:${LAST_COL}5000` })
+    res = await client.spreadsheets.values.get({ spreadsheetId: id, range: `A2:${LAST_COL}5000` })
   } catch (err) {
     cached = null // drop possibly-stale auth so the next call re-initialises
-    console.error('[sheets] read failed:', err instanceof Error ? err.message : err)
-    throw createError({ statusCode: 502, message: 'Google Sheets read failed' })
+    const detail = err instanceof Error ? err.message : String(err)
+    console.error('[sheets] read failed:', detail)
+    throw createError({ statusCode: 502, message: `Google Sheets read failed: ${detail}` })
   }
   const values = res.data.values ?? []
   return values
