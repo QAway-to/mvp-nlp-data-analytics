@@ -16,11 +16,13 @@ export default defineEventHandler(async () => {
     OUTREACH_SHEET_ID_value: sheetId ?? null,
   }
 
-  // Step 1: does the base64 decode to valid JSON with the expected fields?
+  // Step 1: resolve credentials — accept raw JSON or base64 (same as runtime).
   let credentials: Record<string, unknown> | null = null
   if (b64) {
     try {
-      const decoded = Buffer.from(b64, 'base64').toString('utf8')
+      const raw = b64.trim()
+      diag.format = raw.startsWith('{') ? 'raw-json' : 'base64'
+      const decoded = raw.startsWith('{') ? raw : Buffer.from(raw, 'base64').toString('utf8')
       diag.decoded_length = decoded.length
       diag.decoded_head = decoded.slice(0, 12) // expect '{"type":"ser'
       const json = JSON.parse(decoded) as Record<string, unknown>

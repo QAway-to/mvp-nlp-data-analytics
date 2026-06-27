@@ -45,10 +45,15 @@ export interface SheetRow {
 let cached: sheets_v4.Sheets | null = null
 
 function credentials(): Record<string, unknown> {
-  // Secret comes from the env var (set on Render). Local key file is a dev-only
-  // fallback when the env var is absent.
-  const b64 = process.env.GOOGLE_SA_JSON
-  if (b64) return JSON.parse(Buffer.from(b64, 'base64').toString('utf8'))
+  // Secret comes from the env var (set on Render). Accept EITHER the base64 of
+  // the service-account JSON OR the raw JSON pasted directly — a trimmed value
+  // starting with '{' is treated as raw JSON, otherwise base64-decoded. Local
+  // key file is a dev-only fallback when the env var is absent.
+  const raw = process.env.GOOGLE_SA_JSON?.trim()
+  if (raw) {
+    const json = raw.startsWith('{') ? raw : Buffer.from(raw, 'base64').toString('utf8')
+    return JSON.parse(json)
+  }
   try {
     return JSON.parse(readFileSync(LOCAL_KEY_FALLBACK, 'utf8'))
   } catch {
