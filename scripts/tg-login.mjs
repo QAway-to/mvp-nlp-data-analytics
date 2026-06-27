@@ -25,8 +25,12 @@ const ask = (q) => rl.question(q)
 async function main() {
   console.log('\n— Telegram session generator (single account) —\n')
 
-  const apiId = Number((await ask('api_id: ')).trim())
-  const apiHash = (await ask('api_hash: ')).trim()
+  // Prefer env (API_ID_TELEGRAM / API_HASH already set), fall back to prompts.
+  const envId = process.env.API_ID_TELEGRAM || process.env.API_ID
+  const envHash = process.env.API_HASH
+  const apiId = Number((envId || (await ask('api_id: '))).trim())
+  const apiHash = (envHash || (await ask('api_hash: '))).trim()
+  if (envId) console.log(`api_id из env: ${apiId}`)
   if (!Number.isInteger(apiId) || apiId <= 0 || !apiHash) {
     console.error('\n✗ api_id must be a number and api_hash non-empty (get both at my.telegram.org).')
     process.exit(1)
