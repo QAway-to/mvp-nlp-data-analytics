@@ -15,7 +15,9 @@ const HUMAN_RE = /^\s*нет|не\s*бот|не\s*робот|я\s*человек
 const BOTANS_RE = /^\s*да|^\s*я?\s*бот|^\s*yes|робот|i\s*am\s*a?\s*bot/i
 
 // Minimal shape of a GramJS MessageButton (client-augmented helpers).
-interface BtnLike { text?: string; url?: string; data?: Buffer; click: () => Promise<unknown> }
+// click() MUST be called with an options object — GramJS reads options.sharePhone
+// internally, so a bare click() throws "reading 'sharePhone'".
+interface BtnLike { text?: string; url?: string; data?: Buffer; click: (opts: object) => Promise<unknown> }
 interface MsgLike { buttons?: BtnLike[][] }
 
 export interface AntibotResult { attempted: boolean; passed: boolean; note: string }
@@ -31,7 +33,7 @@ function flatButtons(m: MsgLike): BtnLike[] {
 export async function passAntibot(client: TelegramClient, group: EntityArg): Promise<AntibotResult> {
   try {
     await sleep(STEP)
-    const msgs = (await client.getMessages(group, { limit: 8 })) as unknown as MsgLike[]
+    const msgs = (await client.getMessages(group, { limit: 12 })) as unknown as MsgLike[]
     let challenge: BtnLike | undefined
     for (const m of msgs) {
       challenge = flatButtons(m).find((b) => CHALLENGE_RE.test(b.text ?? ''))
@@ -52,13 +54,13 @@ export async function passAntibot(client: TelegramClient, group: EntityArg): Pro
     }
     // inline callback → click directly in the group
     if (challenge.data) {
-      await challenge.click()
-      await sleep(STEP + 800)
+      await challenge.click({})
+      await sleep(STEP + 2500) // give the bot time to lift the write restriction
       return { attempted: true, passed: true, note: 'callback-кнопка нажата' }
     }
     return { attempted: true, passed: false, note: 'неизвестный тип кнопки' }
   } catch (e) {
-    return { attempted: true, passed: false, note: `ошибка антибота: ${String((e as Error)?.message).slice(0, 50)}` }
+    return { attempted: true, passed: false, note: `ошибка антибота: ${String((e as Error)?.message).slice(0, 110)}` }
   }
 }
 
@@ -75,7 +77,7 @@ async function answerBotCaptcha(client: TelegramClient, botUser: string): Promis
   if (!answer) return { attempted: true, passed: false, note: `капча не распознана: [${flat.map((b) => b.text).join(' | ')}]` }
 
   await sleep(STEP)
-  await answer.click()
-  await sleep(STEP + 800)
+  await answer.click({})
+  await sleep(STEP + 2500) // give the group time to unmute after the bot confirms
   return { attempted: true, passed: true, note: `ответил «${answer.text}»` }
 }
