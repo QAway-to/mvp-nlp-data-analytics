@@ -1,0 +1,27 @@
+name: outreach-autopost
+
+# Free-tier heartbeat: wakes the Render service and ticks the send window.
+# The SCHEDULER lives in the service (slots in the sheet) — this is just the
+# dumb clock. Each tick sends at most ONE due placement (server-side decision).
+# Times are UTC; MSK = UTC+3.
+on:
+  schedule:
+    - cron: '55 6 * * *'     # 09:55 MSK — wake before the window
+    - cron: '*/5 7-8 * * *'  # 10:00–11:55 MSK — tick every 5 min
+  workflow_dispatch: {}       # manual trigger for testing
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake service, then send one due placement
+        env:
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+          BASE: https://mvp-nlp-data-analytics.onrender.com
+        run: |
+          # 1) wake (absorbs free-tier cold start; Basic auth passes the gate)
+          curl -s -m 90 -o /dev/null -w "wake: %{http_code}\n" -u "admin:$APP_PASSWORD" "$BASE/" || true
+          # 2) send one due placement (server picks the most-overdue scheduled slot)
+          echo "send-due:"
+          curl -s -m 150 -u "admin:$APP_PASSWORD" -H "Content-Type: application/json" -d '{}' "$BASE/api/send-due"
+          echo
