@@ -10,6 +10,28 @@ import { passAntibot } from '~/server/utils/antibot'
 const STEP = 1200
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
+// Hard daily cap on auto attempts — each attempt joins a group, and join-burn is
+// the main ban vector, so a backlog must never dump a burst. Env-overridable.
+const DAILY_CAP = Number(process.env.OUTREACH_DAILY_CAP || 6)
+
+// Start of the current MSK calendar day as a UTC epoch (for the daily count).
+function mskDayStart(): number {
+  const msk = new Date(Date.now() + 3 * 3_600_000)
+  return Date.UTC(msk.getUTCFullYear(), msk.getUTCMonth(), msk.getUTCDate()) - 3 * 3_600_000
+}
+
+// First open (not closed/hidden) forum topic — forum groups reject posts to the
+// closed General topic (TOPIC_CLOSED); a message must target an open topic.
+async function pickForumTopic(client: TelegramClient, channel: Api.Channel): Promise<number | null> {
+  try {
+    const res = await client.invoke(new Api.channels.GetForumTopics({ channel: channel as unknown as Api.TypeInputChannel, limit: 50 }))
+    const open = (res.topics ?? []).filter((t): t is Api.ForumTopic => t instanceof Api.ForumTopic && !t.closed && !t.hidden)
+    if (!open.length) return null
+    const pref = open.find((t) => /общ|general|чат|болтал|флуд|основн|свобод/i.test(t.title ?? ''))
+    return (pref ?? open[0]).id
+  } catch { return null }
+}
+
 // Send ONE due placement per call: pick the most-overdue scheduled row, join the
 // group if needed, post a fresh message, capture the t.me/<chat>/<id> link, mark it.
 // Called every few minutes by the GitHub Actions heartbeat across the send window —
@@ -46,11 +68,23 @@ export default defineEventHandler(async (event) => {
     return { success: true, dryRun: true, would_send: `@${target.handle}`, slot: target.slot, due_count: due.length }
   }
 
-  // Mark a row 'пропущено' + reason so a failing target never blocks the queue
-  // (it's the most-overdue, so it'd be re-picked every tick otherwise).
+  // Account-safety: stop once today's auto attempts (joins) hit the cap.
+  const dayStart = mskDayStart()
+  const todayAuto = rows.filter((r) => {
+    const pd = Date.parse(r.postedDate)
+    return !Number.isNaN(pd) && pd >= dayStart &&
+      (r.status.toLowerCase() === 'размещено' || (r.reason ?? '').startsWith('[auto]'))
+  }).length
+  if (todayAuto >= DAILY_CAP) {
+    return { success: true, sent: 0, note: `дневной лимит ${DAILY_CAP} достигнут (сегодня ${todayAuto})` }
+  }
+
+  // Mark a row 'пропущено' + reason (with a date stamp so it counts toward the daily
+  // cap) so a failing target never blocks the queue — it'd be re-picked every tick.
   const markSkipped = (reason: string) =>
-    batchWrite([{ range: `${cellRange(COL.status, target.row)}`, values: [['пропущено']] },
-                { range: `${cellRange(COL.reason, target.row)}`, values: [[`[auto] ${reason}`.slice(0, 120)]] }])
+    batchWrite([{ range: cellRange(COL.status, target.row), values: [['пропущено']] },
+                { range: cellRange(COL.reason, target.row), values: [[`[auto] ${reason}`.slice(0, 120)]] },
+                { range: cellRange(COL.postedDate, target.row), values: [[new Date().toISOString()]] }])
 
   const isFlood = (m: string) => /FLOOD_WAIT/i.test(m)
   const isGate = (m: string) => /CHAT_WRITE_FORBIDDEN|CHAT_SEND_PLAIN_FORBIDDEN|USER_BANNED_IN_CHANNEL|CHAT_ADMIN_REQUIRED/i.test(m)
@@ -76,10 +110,23 @@ export default defineEventHandler(async (event) => {
       await sleep(STEP + 800) // let membership register
     }
 
+    // Forum groups reject posts to the closed General topic → target an open topic.
+    let topicId: number | null = null
+    if (entity instanceof Api.Channel && entity.forum) {
+      topicId = await pickForumTopic(client, entity)
+      await sleep(STEP)
+      if (topicId == null) {
+        await markSkipped('форум: нет открытых тем').catch(() => {})
+        return { success: false, sent: 0, skipped: `@${target.handle}`, reason: 'форум: нет открытых тем' }
+      }
+    }
+
     const { text, source } = await generateMessage()
     await sleep(STEP)
 
-    const trySend = () => client.sendMessage(entity, { message: text })
+    const trySend = () => topicId != null
+      ? client.sendMessage(entity, { message: text, replyTo: topicId })
+      : client.sendMessage(entity, { message: text })
     let msg
     let antibotNote = ''
     try {
