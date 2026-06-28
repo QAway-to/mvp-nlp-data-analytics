@@ -8,6 +8,10 @@ export default defineEventHandler((event) => {
   const expected = process.env.APP_PASSWORD
   if (!expected) return // gate off until configured (keeps local dev open)
 
+  // Cron trigger endpoints carry their own ?key and must be reachable by external
+  // cron services (which send a plain GET, no Basic auth) → exempt from the gate.
+  if (getRequestURL(event).pathname.startsWith('/api/cron/')) return
+
   const header = getRequestHeader(event, 'authorization') ?? ''
   if (header.startsWith('Basic ')) {
     const decoded = Buffer.from(header.slice(6), 'base64').toString('utf8')
