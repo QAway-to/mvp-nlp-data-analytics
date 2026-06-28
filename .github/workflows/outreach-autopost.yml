@@ -6,8 +6,10 @@ name: outreach-autopost
 # Times are UTC; MSK = UTC+3.
 on:
   schedule:
-    - cron: '55 6 * * *'     # 09:55 MSK — wake before the window
-    - cron: '*/5 7-8 * * *'  # 10:00–11:55 MSK — tick every 5 min
+    # Every 10 min across the active day (06:00–19:50 UTC = 09:00–22:50 MSK).
+    # Doubles as the free-tier keep-alive AND the send-ticker — send-due is a no-op
+    # unless a slot is due, so any window scheduled in the sheet just fires.
+    - cron: '*/10 6-19 * * *'
   workflow_dispatch: {}       # manual trigger for testing
 
 jobs:
