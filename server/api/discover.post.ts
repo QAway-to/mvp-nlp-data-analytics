@@ -2,6 +2,7 @@ import { TelegramClient, Api } from 'telegram'
 import { StringSession } from 'telegram/sessions/index.js'
 import { z } from 'zod'
 import { readQueue, appendRows, COL } from '~/server/utils/sheets'
+import { vetChannel } from '~/server/utils/tgVet'
 
 // On-demand GramJS discovery of postable, thematic GROUPS (read-only: search +
 // resolve + read flags; NO join, NO post). Bounded to fit the free-tier request
@@ -70,17 +71,12 @@ export default defineEventHandler(async (event) => {
       try { full = await client.invoke(new Api.channels.GetFullChannel({ channel: ch })) }
       catch (e) { skipped.push(`@${ch.username} ${String((e as Error)?.message).slice(0, 30)}`); await sleep(600); continue }
       const fc = full.fullChat as Api.ChannelFull
-      const members = Number(fc.participantsCount ?? 0)
-      const slow = Number(fc.slowmodeSeconds ?? 0)
       const about = (fc as { about?: string }).about ?? ''
-      const reasons: string[] = []
-      if (fc.defaultBannedRights?.sendMessages) reasons.push('писать нельзя')
-      if (members && members < MIN_MEMBERS) reasons.push(`мал ${members}`)
-      if (members > MAX_MEMBERS) reasons.push(`мега ${members}`)
-      if (slow > 300) reasons.push(`slow ${slow}`)
+      const vet = vetChannel(ch, fc, { min: MIN_MEMBERS, max: MAX_MEMBERS })
+      const reasons = [...vet.reasons]
       if (!RELEVANT.test(ch.title + ' ' + about)) reasons.push('не релевантно')
       if (reasons.length) { skipped.push(`@${ch.username} ${reasons.join(',')}`); }
-      else good.push({ handle: ch.username!, title: ch.title, members })
+      else good.push({ handle: ch.username!, title: ch.title, members: vet.members })
       await sleep(800)
     }
 
@@ -116,6 +112,8 @@ async function writeToSheet(good: Found[]): Promise<number> {
     r[COL.chatUrl] = `https://t.me/${g.handle}`
     r[COL.members] = g.members || ''
     r[COL.status] = 'ожидает'
+    r[COL.verdict] = 'GO'
+    r[COL.reason] = '[acc] постируемая группа (дискавери)'
     return r
   })
   await appendRows(rows)
