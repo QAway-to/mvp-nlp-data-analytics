@@ -11,7 +11,7 @@ export default defineEventHandler(async () => {
 
   const base = existing.length
   const rows = toAdd.map((t, i) => {
-    const r: (string | number)[] = new Array(17).fill('')
+    const r: (string | number)[] = new Array(16).fill('')
     r[COL.num] = base + i + 1
     r[COL.city] = t.city
     r[COL.category] = t.category

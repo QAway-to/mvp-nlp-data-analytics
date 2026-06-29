@@ -93,7 +93,7 @@
 <script setup lang="ts">
 interface Row {
   row: number; handle: string; city: string; category: string; title: string
-  members: string; variant: string; postedDate: string; messageUrl: string; screenshot: string
+  members: string; variant: string; postedDate: string; messageUrl: string
   status: string; verifiedAt: string; verdict: string; reason: string; slot: string; online: string; activity: string
   chatUrlFull?: string
 }

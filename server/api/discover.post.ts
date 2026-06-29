@@ -104,7 +104,7 @@ async function writeToSheet(good: Found[]): Promise<number> {
   if (!fresh.length) return 0
   const base = existing.length
   const rows = fresh.map((g, i) => {
-    const r: (string | number)[] = new Array(17).fill('')
+    const r: (string | number)[] = new Array(16).fill('')
     r[COL.num] = base + i + 1
     r[COL.city] = 'вся РФ'
     r[COL.category] = 'discovered'

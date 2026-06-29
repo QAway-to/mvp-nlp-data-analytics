@@ -38,7 +38,8 @@ export default defineEventHandler(async (event) => {
         else if (v.state === 'deleted') { status = 'удалено' }
       }
     }
-    if (screenshotUrl) updates.push({ range: cellRange(COL.screenshot, row), values: [[screenshotUrl]] })
+    // The dedicated screenshot column was removed from the sheet; there is no
+    // longer a cell to store the URL in. It still feeds the "no proof" note below.
   }
 
   updates.push({ range: cellRange(COL.status, row), values: [[status]] })

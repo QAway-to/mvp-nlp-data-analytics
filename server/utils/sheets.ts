@@ -12,12 +12,15 @@ const SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 const LOCAL_KEY_FALLBACK = 'C:\\Users\\sadov\\.config\\gcp\\sheets-sa.json'
 
 // Column layout (1-indexed letters ↔ 0-indexed array positions).
+// NOTE: the old "screenshot" column (formerly J) was removed from the sheet, so
+// every column from `status` onward shifted one place left. The map reflects the
+// live layout — keep it in sync with the actual Google Sheet.
 export const COL = {
   num: 0, city: 1, category: 2, title: 3, chatUrl: 4, members: 5, variant: 6,
-  postedDate: 7, messageUrl: 8, screenshot: 9, status: 10, verifiedAt: 11,
-  verdict: 12, reason: 13, slot: 14, online: 15, activity: 16,
+  postedDate: 7, messageUrl: 8, status: 9, verifiedAt: 10,
+  verdict: 11, reason: 12, slot: 13, online: 14, activity: 15,
 } as const
-const LAST_COL = 'Q'
+const LAST_COL = 'P'
 
 export type Status =
   | 'ожидает' | 'запланировано' | 'размещено' | 'проверено' | 'удалено' | 'пропущено' | 'skip'
@@ -32,7 +35,6 @@ export interface SheetRow {
   variant: string
   postedDate: string
   messageUrl: string
-  screenshot: string
   status: string
   verifiedAt: string
   verdict: string        // GO | CAUTION | SKIP | ''
@@ -103,7 +105,7 @@ export async function readQueue(): Promise<SheetRow[]> {
         handle: parseHandle(chatUrl || at(COL.title)),
         city: at(COL.city), category: at(COL.category), title: at(COL.title),
         members: at(COL.members), variant: at(COL.variant), postedDate: at(COL.postedDate),
-        messageUrl: at(COL.messageUrl), screenshot: at(COL.screenshot), status: at(COL.status),
+        messageUrl: at(COL.messageUrl), status: at(COL.status),
         verifiedAt: at(COL.verifiedAt), verdict: at(COL.verdict), reason: at(COL.reason),
         slot: at(COL.slot), online: at(COL.online), activity: at(COL.activity),
       }
