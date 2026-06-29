@@ -124,15 +124,27 @@ function fmt(iso: string): string {
   return new Date(t + cfg.value.tzOffsetHours * 3_600_000).toISOString().slice(0, 16).replace('T', ' ')
 }
 
+// Sheets-backed endpoints (targets/due) can hang on a cold Render start while
+// the first Google auth/read warms up. Bound each request with a timeout and
+// retry so a stuck call aborts and re-fires instead of blocking the load
+// forever — which is what left the UI stuck on zeros.
+const FETCH_OPTS = { retry: 4, retryDelay: 1_000, timeout: 15_000 } as const
+
 async function refreshAll() {
-  const [t, s, d] = await Promise.all([
-    $fetch<{ data: Row[] }>('/api/outreach/targets'),
-    $fetch<{ data: Cfg }>('/api/outreach/schedule'),
-    $fetch<{ data: Row[] }>('/api/outreach/due'),
+  // allSettled, not all: one slow/failed endpoint must not blank the others.
+  const [t, s, d] = await Promise.allSettled([
+    $fetch<{ data: Row[] }>('/api/outreach/targets', FETCH_OPTS),
+    $fetch<{ data: Cfg }>('/api/outreach/schedule', FETCH_OPTS),
+    $fetch<{ data: Row[] }>('/api/outreach/due', FETCH_OPTS),
   ])
-  queue.value = t.data.map(withUrl)
-  cfg.value = s.data
-  due.value = d.data.map(withUrl)
+  if (t.status === 'fulfilled') queue.value = t.value.data.map(withUrl)
+  if (s.status === 'fulfilled') cfg.value = s.value.data
+  if (d.status === 'fulfilled') due.value = d.value.data.map(withUrl)
+
+  const failed = [t, s, d].find((r) => r.status === 'rejected') as PromiseRejectedResult | undefined
+  if (failed) {
+    throw failed.reason instanceof Error ? failed.reason : new Error('Не удалось загрузить данные')
+  }
 }
 
 async function run(fn: () => Promise<void>) {
